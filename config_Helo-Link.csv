@@ -1,0 +1,7 @@
+sioc_hote,192.168.0.10
+sioc_port,8092
+sioc_plage,0
+link_hote,192.168.0.10
+link_port,9000
+ts_hote,192.168.0.10
+ts_port,10500
