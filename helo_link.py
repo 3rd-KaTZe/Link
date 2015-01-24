@@ -1,6 +1,6 @@
 # coding=utf-8
 __author__ = 'KaTZe3rd'
-__version__ = 5009
+__version__ = '5009'
 #  KaTZ-Link v0.005
 # 3rd Wing 120th , KaTZe , Q4-2014
 
@@ -27,28 +27,7 @@ debugging = False
 
 
 
-if debugging :
-        #----------------------------------------------------------------------------------------------------------------------------------------------------		
-        # Creation du Logger          #############################################################################
-        #----------------------------------------------------------------------------------------------------------------------------------------------------
 
-        logger = logging.getLogger()
-        logger.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-        # Recuperer le repertoire current avec so.getcwd()
-        currentrep = os.getcwd()
-        # On change de répertoire, en passant sur le sous répertoire log
-        os.chdir("log")
-        #Format fichier log avec date+heure du jour
-        now = datetime.datetime.now()
-        logfilenom= now.strftime("Helo-Link_%Y%m%d-%H%M%S_log.log")
-        fh = logging.FileHandler(logfilenom)
-        fh.setLevel(logging.DEBUG)
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
-        # Retour au répertoire du KaTZ-Link
-        os.chdir(currentrep)
 
 #----------------------------------------------------------------------------------------------------------------------------------------------------		
 #  Données Globales            ############################################################################
@@ -118,40 +97,6 @@ pulse_ws = 100
 #  Paramêtres d'Initialisation ############################################################################
 #----------------------------------------------------------------------------------------------------------------------------------------------------
 
-# Donnees de connection SIOC
-Data_Config= sbr_data.Data_Config()
-
-#Donnée "localhost" ou "192.168.0.10"
-# Les données sont lues dans le fichier "config_Helo-Link.csv" par la subroutine "sbr_data.py"
-# Données IP et Port
-sioc_hote = Data_Config["sioc_hote"]
-sioc_port = int(Data_Config["sioc_port"])
-
-# Décalage de la plage des valeurs SIOC
-# Defaut = 0 , mais les peuvent être décalées, dans siocConfig.lua
-# Faire correspondre la valeur du décalage.
-sioc_plage= int(Data_Config["sioc_plage"])
-
-msg = "Configuration du Helo-Link : \n\n" + "Sioc IP = "+str(sioc_hote)+" ;  Sioc Port = "+ str(sioc_port) + " ;  Décalage des offsets = "+str(sioc_plage)
-print(msg)
-if debugging :
-        logger.info(msg)
-
-# IP et Port du serveur Python
-link_hote = Data_Config["link_hote"]
-link_port = int(Data_Config["link_port"])
-msg1 = "WS IP = "+str(link_hote)+" ;  WS Port = "+str(link_port)
-print(msg1)
-if debugging :
-        logger.info(msg1)
-
-# IP et Port du serveur UDP Plugin Cach3 sur TS
-cach3_hote = Data_Config["ts_hote"]
-cach3_port = int(Data_Config["ts_port"])
-msg2 = "Cach3 IP = "+str(cach3_hote)+" ;  Cach3 Port = "+str(cach3_port)+"\n"
-print(msg2)
-if debugging :
-        logger.info(msg2)
 
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -594,17 +539,87 @@ def Sioc_Client():
 #------------------------------------------------------------------------------------------------------------------
 
 
+class DummyLogger():
+    def __init__(self):
+        pass
+        self.info = self.debug
+        self.warning = self.debug
+
+    def debug(self, *args):
+        pass
+
 
 
 # Main Programme
+if __name__ == "__main__":
+    if debugging :
+        #----------------------------------------------------------------------------------------------------------------------------------------------------
+        # Creation du Logger          #############################################################################
+        #----------------------------------------------------------------------------------------------------------------------------------------------------
 
-KtzWs_1 = threading.Thread(None, WS_Server, "WS_Server_Thread", (), {})
-KtzSioc_2 = threading.Thread(None, Sioc_Client, "Sioc_Server_Thread", (), {})
-#KtzData_3 = threading.Thread(None, Data_Process, "Thread3", (), {})
+        logger = logging.getLogger()
+        logger.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
-KtzWs_1.start()
-KtzSioc_2.start()
-#KtzData_3.start()
+        # Recuperer le repertoire current avec so.getcwd()
+        currentrep = os.getcwd()
+        # On change de répertoire, en passant sur le sous répertoire log
+        os.chdir("log")
+        #Format fichier log avec date+heure du jour
+        now = datetime.datetime.now()
+        logfilenom= now.strftime("Helo-Link_%Y%m%d-%H%M%S_log.log")
+        fh = logging.FileHandler(logfilenom)
+        fh.setLevel(logging.DEBUG)
+        fh.setFormatter(formatter)
+        logger.addHandler(fh)
+        # Retour au répertoire du KaTZ-Link
+        os.chdir(currentrep)
+    else:
+        logger = DummyLogger()
+
+    # Donnees de connection SIOC
+    Data_Config= sbr_data.Data_Config()
+
+    #Donnée "localhost" ou "192.168.0.10"
+    # Les données sont lues dans le fichier "config_Helo-Link.csv" par la subroutine "sbr_data.py"
+    # Données IP et Port
+    sioc_hote = Data_Config["sioc_hote"]
+    sioc_port = int(Data_Config["sioc_port"])
+
+    # Décalage de la plage des valeurs SIOC
+    # Defaut = 0 , mais les peuvent être décalées, dans siocConfig.lua
+    # Faire correspondre la valeur du décalage.
+    sioc_plage= int(Data_Config["sioc_plage"])
+
+    msg = "Configuration du Helo-Link : \n\n" + "Sioc IP = "+str(sioc_hote)+" ;  Sioc Port = "+ str(sioc_port) + " ;  Décalage des offsets = "+str(sioc_plage)
+    print(msg)
+    if debugging :
+            logger.info(msg)
+
+    # IP et Port du serveur Python
+    link_hote = Data_Config["link_hote"]
+    link_port = int(Data_Config["link_port"])
+    msg1 = "WS IP = "+str(link_hote)+" ;  WS Port = "+str(link_port)
+    print(msg1)
+    if debugging :
+            logger.info(msg1)
+
+    # IP et Port du serveur UDP Plugin Cach3 sur TS
+    cach3_hote = Data_Config["ts_hote"]
+    cach3_port = int(Data_Config["ts_port"])
+    msg2 = "Cach3 IP = "+str(cach3_hote)+" ;  Cach3 Port = "+str(cach3_port)+"\n"
+    print(msg2)
+    if debugging :
+            logger.info(msg2)
+
+
+    KtzWs_1 = threading.Thread(None, WS_Server, "WS_Server_Thread", (), {})
+    KtzSioc_2 = threading.Thread(None, Sioc_Client, "Sioc_Server_Thread", (), {})
+    #KtzData_3 = threading.Thread(None, Data_Process, "Thread3", (), {})
+
+    KtzWs_1.start()
+    KtzSioc_2.start()
+    #KtzData_3.start()
 
         
 
