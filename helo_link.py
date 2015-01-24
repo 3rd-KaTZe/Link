@@ -1,4 +1,7 @@
-# KaTZ-Link v0.005
+# coding=utf-8
+__author__ = 'KaTZe3rd'
+__version__ = 5009
+#  KaTZ-Link v0.005
 # 3rd Wing 120th , KaTZe , Q4-2014
 
 # Le système 0003 fonction pour l'export des données vers KaTZ-Pit
