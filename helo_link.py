@@ -621,6 +621,8 @@ if __name__ == "__main__":
     KtzSioc_2.start()
     #KtzData_3.start()
 
+    #TODO: bug à la fermture, peut-être voir avec thread.join()
+
         
 
 
