@@ -1,6 +1,5 @@
 # coding=utf-8
 __author__ = 'etcher3rd'
-# push - test
 import sys
 from cx_Freeze import setup, Executable
 
@@ -21,9 +20,9 @@ if sys.platform == 'win32':
     # base = 'Win32GUI'
     base = 'console'
 
-setup(  name = 'EAMI',
+setup(  name = 'KATZE_LINK',
         version = __version__,
-        description = "Etcher's Automated Mod Installer",
+        description = "Katze Link",
         options = {'build_exe': build_exe_options},
         executables = [
             Executable('helo_link.py',
