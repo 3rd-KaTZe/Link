@@ -76,12 +76,17 @@
 684,D15_drift_V,1
 692,Sling_3D,1
 694,Sling_2D,1
+731,Abris1,1
+732,Abris2,1
+733,Abris3,1
 1002,DlinkL1,1
 1004,DlinkL2,1
 1006,DlinkL3,1
 1010,Tgt_Btn,1
+1014,Wpn_Ammo,1
 1015,Wpn_Ka,1
 1016,Wpn_Lamp,1
 1018,Wpn_Flag,1
 1020,Wpn_SW_1,1
 1025,Flr_SW_1,1
+1040,UV26_1,1
