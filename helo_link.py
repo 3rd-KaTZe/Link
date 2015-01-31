@@ -442,7 +442,10 @@ def sioc_client():
 
             # Transcription du message recu en dictionnaire n°=Valeur
             # A l'aide de la fonction SIOC_Read du module str_function
-            KTZmain.Sioc_Dico = sbr_string.Sioc_Read(KTZmain.msgSioc)
+            try:
+                KTZmain.Sioc_Dico = sbr_string.Sioc_Read(KTZmain.msgSioc)
+            except IndexError:
+                logger.error("fichier SSI périmé ?") # TODO: Katze regarde une fois
             # Donnée "Sioc_Dico" va être "traduite" et envoyée vers KaTZ-Pit
             # KTZmain.Trans_Dico = KTZmain.Sioc_Dico
 
