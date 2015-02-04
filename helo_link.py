@@ -99,8 +99,7 @@ def ws_server():
 
     # Démarrage du serveur Web-Socket
     print("WS_Server >> Start-up du serveur Web-Socket")
-    if debugging:
-        logger.info("WS_Server >> Start-up du serveur Web-Socket")
+    logger.info("WS_Server >> Start-up du serveur Web-Socket")
 
     # ouverture de la socket d'écoute
     miaou = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
@@ -507,6 +506,8 @@ if __name__ == "__main__":
         # Recuperer le repertoire current avec so.getcwd()
         currentrep = os.getcwd()
         # On change de répertoire, en passant sur le sous répertoire log
+        if not os.path.exists('log'):
+            os.mkdir('log')
         os.chdir("log")
         #Format fichier log avec date+heure du jour
         now = datetime.datetime.now()
