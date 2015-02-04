@@ -3,6 +3,7 @@ __author__ = 'KaTZe3rd'
 __version__ = '5009'
 # KaTZ-Link v0.005
 # 3rd Wing 120th , KaTZe , Q4-2014
+# Compilation et release par etcher, Q1 2015
 
 # Le système 0003 fonction pour l'export des données vers KaTZ-Pit
 # Système 004, export des données offset vers KaTZ-Pit
