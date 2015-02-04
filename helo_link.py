@@ -3,6 +3,7 @@ __author__ = 'KaTZe3rd'
 __version__ = '5009'
 # KaTZ-Link v0.005
 # 3rd Wing 120th , KaTZe , Q4-2014
+# Compilation et release par etcher, Q1 2015
 
 # Le système 0003 fonction pour l'export des données vers KaTZ-Pit
 # Système 004, export des données offset vers KaTZ-Pit
@@ -99,8 +100,7 @@ def ws_server():
 
     # Démarrage du serveur Web-Socket
     print("WS_Server >> Start-up du serveur Web-Socket")
-    if debugging:
-        logger.info("WS_Server >> Start-up du serveur Web-Socket")
+    logger.info("WS_Server >> Start-up du serveur Web-Socket")
 
     # ouverture de la socket d'écoute
     miaou = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
@@ -507,6 +507,8 @@ if __name__ == "__main__":
         # Recuperer le repertoire current avec so.getcwd()
         currentrep = os.getcwd()
         # On change de répertoire, en passant sur le sous répertoire log
+        if not os.path.exists('log'):
+            os.mkdir('log')
         os.chdir("log")
         #Format fichier log avec date+heure du jour
         now = datetime.datetime.now()
