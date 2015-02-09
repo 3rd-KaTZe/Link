@@ -18,6 +18,7 @@
 124,AltiRad_DX,1
 126,AltiRad_FI,1
 130,Vario,1
+132,Bille,1
 134,Acc_G,0.1
 136,AoA,1
 140,Pitch,1
@@ -27,6 +28,7 @@
 152,Cap,1
 154,Route,1
 156,Way,1
+160,WP_num,1
 162,WP_dist,0.001
 180,EUP,1
 202,Eng_rpm,1 
@@ -90,6 +92,7 @@
 694,Sling_2D,1
 702,ILS_up,1
 704,ILS_lat,1
+706,Rwy_x,1
 731,Abris1,1
 732,Abris2,1
 733,Abris3,1
