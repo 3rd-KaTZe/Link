@@ -64,6 +64,7 @@
 510,ACDC_volt,1
 514,E_AC_SW,1
 516,E_AC_V,1
+520,E_NavLight,1
 552,AP_KA1,1
 554,AP_KA2,1
 556,AP_mode,1
