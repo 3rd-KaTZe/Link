@@ -4,15 +4,16 @@ __version__ = '5009'
 
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QTextCursor, QPixmap, QImage
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject, QByteArray
+from PyQt5.QtGui import QTextCursor, QPixmap, QImage, QIntValidator
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject, QByteArray, QTimer
 from PyQt5.QtWebSockets import QWebSocketServer
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
 from custom_logging import mkLogger, logged
 from queue import Queue
 from logging import Handler, Formatter
 from ui import main_ui
-from time import sleep
+import win32com.client
+import wmi
 
 from os import _exit
 
@@ -207,214 +208,43 @@ def sioc_client():
         print("SIOC Loop >> Tentative de reconnection\n")
         ini_lock.acquire()
 
+STATE_DIC = {
+    0: 'déconnecté',
+    1: 'résolution de l\'hôte',
+    2: 'établissement de la connexion',
+    3: 'connecté',
+    4: 'server_side_only',
+    5: 'internal_use_only',
+    6: 'sur le point de fermer'
+}
 
-class WebSocket():
-
-    class Pinger(QObject):
-
-        logger = None
-        @logged
-        def __init__(self):
-            QObject.__init__(self)
-
-        @pyqtSlot()
-        def run(self):
-            while True:
-                self.logger.debug('')
-                sleep(2)
-                for client in WebSocket.Server.client_sockets:
-                    self.logger.debug('pinging: {}'.format(client))
-                    client.ping()
-
-    class Client(QObject):
-
-        logger = None
-        @logged
-        def __init__(self, socket):
-            self.logger.debug('')
-            QObject.__init__(self)
-            self.socket = socket
-            self.socket.disconnected.connect(self.on_disconnect)
-            self.socket.connected.connect(self.on_connect)
-            self.socket.stateChanged.connect(self.on_state_changed)
-
-        @pyqtSlot()
-        def on_disconnect(self):
-            self.logger.debug('')
-
-        @pyqtSlot()
-        def on_connect(self):
-            self.logger.debug('')
-
-        @pyqtSlot()
-        def on_state_changed(self):
-            self.logger.debug(self.socket.state())
-
-
-    # class Server(QObject):
-    #     connected = pyqtSignal()
-    #     listening = pyqtSignal()
-    #     disconnected = pyqtSignal()
-    #     new_client_count = pyqtSignal(int)
-    #     msg_from_ws = pyqtSignal(str)
-    #     clients = []
-    #     clients_threads = []
-    #
-    #     logger = None
-    #     @logged
-    #     def __init__(self, parent):
-    #         self.logger.debug('')
-    #         QObject.__init__(self)
-    #         ws_v2.closed.connect(self.on_close)
-    #         self.__client_count = 0
-    #         self.parent = parent
-    #         self.clients = []
-    #         self.clients_threads = []
-    #
-    #     @pyqtSlot()
-    #     def run(self):
-    #         self.start_listening()
-    #
-    #     @pyqtSlot()
-    #     def start_listening(self):
-    #         self.logger.debug('')
-    #         if ws_v2.listen(QHostAddress.LocalHost, link_port):
-    #             pass
-    #             # ws_v2.newConnection.connect(self.on_new_connection)
-    #
-    #     @pyqtSlot()
-    #     def on_close(self):
-    #         self.logger.debug('')
-    #         ws_v2.newConnection.disconnect()
-    #
-    #     @pyqtSlot()
-    #     def on_new_connection(self):
-    #         self.logger.debug('')
-    #         # client_thread = QThread(self)
-    #         client = ws_v2.nextPendingConnection()
-    #         self.logger.debug(client)
-    #         client.sendTextMessage(json.dumps(KTZmain.Trans_Dico))
-    #         client.disconnected.connect(self.on_client_disconnect)
-    #         client.binaryMessageReceived.connect(self.process_binary_message)
-    #         client.textMessageReceived.connect(self.process_text_message)
-    #         client.binaryFrameReceived.connect(self.process_binary_frame)
-    #         client.textFrameReceived.connect(self.process_text_frame)
-    #         client.pong.connect(self.on_pong)
-    #         client.error.connect(self.on_error)
-    #         # client.moveToThread(client_thread)
-    #         # client.stateChanged.connect(self.on_state_changed)
-    #         # self.parent.ws_clients.append(client)
-    #         self.clients.append(client)
-    #         # self.clients_threads.append(client_thread)
-    #         # client_thread.start()
-    #         client.flush()
-    #
-    #     @pyqtSlot()
-    #     def on_state_changed(self):
-    #         client = self.sender()
-    #         self.logger.debug(client.state())
-    #
-    #     @pyqtSlot()
-    #     def on_error(self):
-    #         client = self.sender()
-    #         self.logger.error(client.error())
-    #
-    #     @pyqtSlot()
-    #     def on_client_disconnect(self):
-    #         self.logger.debug('')
-    #         client = self.sender()
-    #         # self.client_sockets.pop(i)
-    #         self.new_client_count.emit(self.client_count)
-    #
-    #     @pyqtSlot(QByteArray, bool)
-    #     def process_binary_frame(self, msg, is_last_frame):
-    #         self.logger.debug('')
-    #         client = self.sender()
-    #         self.logger.debug(msg)
-    #
-    #     @pyqtSlot(QByteArray, bool)
-    #     def process_text_frame(self, msg, is_last_frame):
-    #         self.logger.debug('')
-    #         client = self.sender()
-    #         self.logger.debug(msg)
-    #
-    #     @pyqtSlot(QByteArray)
-    #     def process_text_message(self, msg):
-    #         self.logger.debug('')
-    #         client = self.sender()
-    #         self.logger.debug(msg)
-    #
-    #     @pyqtSlot(QByteArray)
-    #     def process_binary_message(self, msg):
-    #         self.logger.debug('')
-    #         client = self.sender()
-    #         self.logger.debug(msg)
-    #
-    #     @pyqtSlot(str)
-    #     def write(self, msg):
-    #         self.logger.debug('')
-    #         for client in self.client_sockets:
-    #             self.logger.debug(client)
-    #             client.sendTextMessage(msg)
-    #
-    #     @pyqtSlot()
-    #     def read_data(self):
-    #         for client in self.client_sockets:
-    #             while not client.atEnd():
-    #                 msg = client.read(4096).decode().strip('\r\n')
-    #                 if msg in ['Arn.Vivo:']:
-    #                     self.msg_from_sioc.emit('SIOC ALIVE')  # DEBUG
-    #                     break
-    #                 # self.logger.debug('message reçu: {}'.format(msg))
-    #                 self.msg_from_ws.emit(msg)
-    #
-    #     @property
-    #     def client_count(self):
-    #         print(self.__client_count)
-    #         return len(self.__client_sockets)
-    #
-    #     @pyqtSlot(int, str)
-    #     def on_pong(self, elapsed_time, payload):
-    #         self.logger.debug(elapsed_time)
-
+ERROR_DIC = {
+    0: 'connexion refusée par le serveur',
+    1: 'connexion terminée par le serveur',
+    2: 'l\'adresse du serveur n\'a pas été trouvée',
+    3: 'privilèges insuffisants',
+    4: 'plus de ressources disponibles (trop de sockets ouverts)',
+    5: 'time out de l\'opération',
+    6: 'datagram trop grand pour l\'OS',
+    7: 'erreur réseau',
+    8: 'adresse exclusive réservée',  # UDP
+    9: 'l\'adresse n\'appartient pas à cet hôte',  # UDP
+    10: 'l\'opération demandée n\'est pas supportée par l\'OS',
+    11: 'internal_use_only',
+    12: 'le proxy requiert une autentification',
+    13: 'échec de la connexion sécurisée',
+    14: 'la connexion à ce serveur à été refusée par l\'OS',
+    15: 'la connexion s\'est terminée de manière innatendue',
+    16: 'le serveur n\' pas répondu lors de la phase d\'autentification',
+    17: 'l\'adresse du proxy n\'a pas été trouvée',
+    18: 'réponse innatendue de la part du serveur proxy'
+}
 
 class SiocClient(QObject):
 
     connected = pyqtSignal()
     disconnected = pyqtSignal()
     msg_from_sioc = pyqtSignal(str)
-
-    STATE_DIC = {
-        0: 'déconnecté',
-        1: 'résolution de l\'hôte',
-        2: 'établissement de la connexion',
-        3: 'connecté',
-        4: 'server_side_only',
-        5: 'internal_use_only',
-        6: 'sur le point de fermer'
-    }
-
-    ERROR_DIC = {
-        0: 'connexion refusée par le serveur',
-        1: 'connexion terminée par le serveur',
-        2: 'l\'adresse du serveur n\'a pas été trouvée',
-        3: 'privilèges insuffisants',
-        4: 'plus de ressources disponibles (trop de sockets ouverts)',
-        5: 'time out de l\'opération',
-        6: 'datagram trop grand pour l\'OS',
-        7: 'erreur réseau',
-        8: 'adresse exclusive réservée',  # UDP
-        9: 'l\'adresse n\'appartient pas à cet hôte',  # UDP
-        10: 'l\'opération demandée n\'est pas supportée par l\'OS',
-        11: 'internal_use_only',
-        12: 'le proxy requiert une autentification',
-        13: 'échec de la connexion sécurisée',
-        14: 'la connexion à ce serveur à été refusée par l\'OS',
-        15: 'la connexion s\'est terminée de manière innatendue',
-        16: 'le serveur n\' pas répondu lors de la phase d\'autentification',
-        17: 'l\'adresse du proxy n\'a pas été trouvée',
-        18: 'réponse innatendue de la part du serveur proxy'
-    }
 
     logger = None
     @logged
@@ -449,13 +279,13 @@ class SiocClient(QObject):
 
     @pyqtSlot()
     def on_state_changed(self):
-        self.logger.debug('statut: {}'.format(self.STATE_DIC[sioc_socket_v2.state()]))
+        self.logger.debug('statut: {}'.format(STATE_DIC[sioc_socket_v2.state()]))
 
     @pyqtSlot()
     def on_error(self):
         if sioc_socket_v2.error() in [1]:
             return
-        self.logger.error(self.ERROR_DIC[sioc_socket_v2.error()])
+        self.logger.error(ERROR_DIC[sioc_socket_v2.error()])
 
     @pyqtSlot()
     def read_data(self):
@@ -475,11 +305,115 @@ class SiocClient(QObject):
             self.logger.error('erreur lors de l\'écriture sur le socket')
 
 
-
 class WebSocketServer(QWebSocketServer):
+
+    new_client_count = pyqtSignal(int)
+    logger, clients = None, []
+    @logged
+    def __init__(self, *args, **kwargs):
+        self.logger.debug('')
+        QWebSocketServer.__init__(self, *args, **kwargs)
+
+    def start_listening(self):
+        self.logger.debug('')
+        if not self.listen(QHostAddress.LocalHost, link_port):
+            self.logger.error(ERROR_DIC[self.error()])
+        else:
+            self.newConnection.connect(self.on_new_connection)
+
+
+    @pyqtSlot()
+    def on_new_connection(self):
+        self.logger.debug('')
+        client = self.nextPendingConnection()
+        self.logger.debug(client)
+        client.disconnected.connect(self.on_client_disconnect)
+        client.textMessageReceived.connect(self.process_text_message)
+        client.pong.connect(self.on_pong)
+        client.error.connect(self.on_error)
+        client.stateChanged.connect(self.on_client_state_changed)
+        self.clients.append(client)
+        self.new_client_count.emit(self.clients_count)
+        client.ping()
+
+    @property
+    def clients_count(self):
+        return len(self.clients)
+
+    @pyqtSlot()
+    def on_close(self):
+        self.logger.debug('')
+        self.ws_v2.newConnection.disconnect()
+
+    @pyqtSlot(int, str)
+    def on_pong(self, elapsed_time, payload):
+        self.logger.debug(elapsed_time)
+
+    @pyqtSlot()
+    def on_client_state_changed(self):
+        client = self.sender()
+        self.logger.debug(STATE_DIC[client.state()])
+
+    @pyqtSlot()
+    def on_error(self):
+        client = self.sender()
+        self.logger.error(ERROR_DIC[client.error()])
+
+    @pyqtSlot()
+    def on_client_disconnect(self):
+        self.logger.debug('')
+        client = self.sender()
+        client.deleteLater()
+        self.clients.remove(client)
+        self.new_client_count.emit(self.clients_count)
+
+    @pyqtSlot(QByteArray)
+    def process_text_message(self, msg):
+        self.logger.debug('')
+        client = self.sender()
+        self.logger.debug(msg)
+
+    @pyqtSlot(QByteArray)
+    def process_binary_message(self, msg):
+        self.logger.debug('')
+        client = self.sender()
+        self.logger.debug(msg)
+
+    @pyqtSlot(str)
+    def write(self, msg):
+        self.logger.debug('')
+        for client in self.clients:
+            self.logger.debug(client)
+            client.sendTextMessage(msg)
+
+
+class FocusDCS(QObject):
+
+    logger = None
+    @logged
     def __init__(self):
-        QWebSocketServer.__init__(self)
-        self.
+        self.logger.debug('')
+        QObject.__init__(self)
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.on_timeout)
+        self.__is_running = False
+
+    def start(self, interval):
+        self.__is_running = True
+        self.timer.start(interval)
+
+    def stop(self):
+        self.__is_running = False
+        self.timer.stop()
+
+    @pyqtSlot()
+    def on_timeout(self):
+        # self.logger.debug('')
+        raise_dcs_window()
+
+    @property
+    def is_running(self):
+        return self.__is_running
 
 
 class Gui():
@@ -509,6 +443,8 @@ class Gui():
         logger = None
         sioc_thread, sioc_client = None, None
         logger_thread, logger_handler = None, None
+        dcs_focus_timer, dcs_focus_timer_thread = None, None
+        server = None
 
         @logged
         def __init__(self):
@@ -518,6 +454,16 @@ class Gui():
             self.show()
 
             self.start_logger_handler()
+
+            # self.start_sioc_client()
+
+            self.start_ws_server()
+
+            self.start_dcs_focus_timer()
+
+            self.test.clicked.connect(lambda: self.server.write('{}'))
+            self.dcs_focus_button.clicked.connect(self.on_dcs_focus_button_state_clicked)
+            self.dcs_focus_timeout.setValidator(QIntValidator(50, 5000))
 
         @pyqtSlot()
         def start_logger_handler(self):
@@ -544,88 +490,18 @@ class Gui():
 
         @pyqtSlot()
         def start_ws_server(self):
-            self.server = Gui.Main.ws_server
             self.logger.debug('')
-            self.clients = []
-            self.clients_count = 0
-            self.ws_v2 = QWebSocketServer('', QWebSocketServer.NonSecureMode)
-            if not self.ws_v2.listen(QHostAddress.LocalHost, link_port):
-                self.logger.error('erreur lors du démarrage du werveur WebSocket')
-            self.ws_v2.newConnection.connect(self.on_new_connection)
-
+            self.server = WebSocketServer('', QWebSocketServer.NonSecureMode)
+            self.server.start_listening()
+            if self.server.isListening():
+                self.server.new_client_count.connect(self.on_client_count_change)
 
         @pyqtSlot()
-        def on_new_connection(self):
-            self.logger.debug('')
-            # client_thread = QThread(self)
-            client = self.ws_v2.nextPendingConnection()
-            self.logger.debug(client)
-            client.disconnected.connect(self.on_client_disconnect)
-            client.binaryMessageReceived.connect(self.process_binary_message)
-            client.textMessageReceived.connect(self.process_text_message)
-            client.binaryFrameReceived.connect(self.process_binary_frame)
-            client.textFrameReceived.connect(self.process_text_frame)
-            client.pong.connect(self.on_pong)
-            client.error.connect(self.on_error)
-            # client.moveToThread(client_thread)
-            client.stateChanged.connect(self.on_state_changed)
-            # self.parent.ws_clients.append(client)
-            self.clients.append(client)
-            # self.clients_threads.append(client_thread)
-            # client_thread.start()
-            # client.flush()
-            client.sendTextMessage(json.dumps(KTZmain.Trans_Dico))
-
-        @pyqtSlot()
-        def on_close(self):
-            self.logger.debug('')
-            self.ws_v2.newConnection.disconnect()
-
-        @pyqtSlot(int, str)
-        def on_pong(self, elapsed_time, payload):
-            self.logger.debug(elapsed_time)
-
-        @pyqtSlot()
-        def on_state_changed(self):
-            client = self.sender()
-            self.logger.debug(client.state())
-
-        @pyqtSlot()
-        def on_error(self):
-            client = self.sender()
-            self.logger.error(client.error())
-
-        @pyqtSlot()
-        def on_client_disconnect(self):
-            self.logger.debug('')
-            client = self.sender()
-            self.clients.remove(client)
-            # self.client_sockets.pop(i)
-            # self.new_client_count.emit(self.client_count)
-
-        @pyqtSlot(QByteArray, bool)
-        def process_binary_frame(self, msg, is_last_frame):
-            self.logger.debug('')
-            client = self.sender()
-            self.logger.debug(msg)
-
-        @pyqtSlot(QByteArray, bool)
-        def process_text_frame(self, msg, is_last_frame):
-            self.logger.debug('')
-            client = self.sender()
-            self.logger.debug(msg)
-
-        @pyqtSlot(QByteArray)
-        def process_text_message(self, msg):
-            self.logger.debug('')
-            client = self.sender()
-            self.logger.debug(msg)
-
-        @pyqtSlot(QByteArray)
-        def process_binary_message(self, msg):
-            self.logger.debug('')
-            client = self.sender()
-            self.logger.debug(msg)
+        def start_dcs_focus_timer(self):
+            self.dcs_focus_timer_thread = QThread(self)
+            self.dcs_focus_timer = FocusDCS()
+            self.dcs_focus_timer.moveToThread(self.dcs_focus_timer_thread)
+            self.dcs_focus_timer_thread.start()
 
 
 
@@ -662,8 +538,46 @@ class Gui():
         def on_ws_msg(self, msg):
             self.logger.debug('message ws: {}'.format(msg))
 
+        @pyqtSlot(int)
+        def on_client_count_change(self, i):
+            self.logger.debug(i)
+            self.clients_count.setText(str(i))
+
+        @pyqtSlot()
+        def on_dcs_focus_button_state_clicked(self):
+            if self.dcs_focus_timer.is_running:
+                self.dcs_focus_timer.stop()
+                self.dcs_focus_button.setText('Activer')
+                self.dcs_focus_state.setPixmap(QPixmap(':/pics/red_light.png'))
+            else:
+                if raise_dcs_window(refresh_pid=True):
+                    interval = int(self.dcs_focus_timeout.text())
+                    if interval < 100:
+                        interval = 100
+                    self.dcs_focus_button.setText('Désactiver')
+                    self.dcs_focus_state.setPixmap(QPixmap(':/pics/green_light.png'))
+                    self.dcs_focus_timer.start(interval)
+
+
+
+def raise_dcs_window(refresh_pid=False):
+    global dcs_pid
+    if dcs_pid is None or refresh_pid:
+        c = wmi.WMI()
+        dcs_pid = None
+        for process in c.Win32_Process(name='dcs.exe'):
+                dcs_pid = process.ProcessId
+        if dcs_pid is None:
+            logger.warning('le processus DCS.exe n\'a pas été trouvé')
+            return
+    shell = win32com.client.Dispatch("WScript.Shell")
+    shell.AppActivate(dcs_pid)
+    return True
+
+
 # Main Programme
 if __name__ == "__main__":
+    dcs_pid = None
     logger = mkLogger('__main__')
     Data_Config = sbr_data.read_config()
     sioc_hote = Data_Config["sioc_hote"]
