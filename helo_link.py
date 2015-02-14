@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QTextCursor, QPixmap, QImage
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject
 from PyQt5.QtWebSockets import QWebSocket
-from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket
+from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
 from custom_logging import mkLogger, logged
 from queue import Queue
 from logging import Handler, Formatter
@@ -207,6 +207,21 @@ def sioc_client():
         ini_lock.acquire()
 
 
+class WebSocketServer(QObject):
+
+    connected = pyqtSignal()
+    disconnected = pyqtSignal()
+
+    logger = None
+    @logged
+    def __init__(self):
+        self.logger.debug('')
+        QObject.__init__(self)
+        self.start_listening()
+
+    def start_listening(self):
+        ws_v2.bind(QHostAddress.LocalHost, link_port, QAbstractSocket.DontShareAddress)
+
 class SiocClient(QObject):
 
     connected = pyqtSignal()
@@ -354,6 +369,10 @@ class Gui():
             self.sioc_thread.started.connect(self.sioc_client.run)
             self.sioc_thread.start()
 
+            self.ws_thread = QThread(self)
+            self.ws_server = WebSocketServer()
+            ws_v2.connected
+
 
         @pyqtSlot(str)
         def log(self, text):
@@ -372,6 +391,18 @@ class Gui():
         def on_sioc_msg(self, msg):
             self.logger.debug('message SIOC: {}'.format(msg))
 
+        @pyqtSlot()
+        def on_ws_listening(self):
+            self.ws_state_pic.setPixmap(QPixmap(':/pics/orange_light.png'))
+
+        @pyqtSlot()
+        def on_ws_disconnect(self):
+            self.ws_state_pic.setPixmap(QPixmap(':/pics/red_light.png'))
+
+        @pyqtSlot()
+        def on_ws_connect(self):
+            self.ws_state_pic.setPixmap(QPixmap(':/pics/green_light.png'))
+
 # Main Programme
 if __name__ == "__main__":
     logger = mkLogger('__main__')
@@ -386,7 +417,7 @@ if __name__ == "__main__":
     
     
     sioc_socket_v2 = QTcpSocket()
-    pit_socket_v2 = QWebSocket()
+    ws_v2 = QWebSocket()
 
     qt_app = QApplication(sys.argv)
     main_ui = Gui.Main()

@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="pics">
+    <file>orange_light.png</file>
     <file>red_light.png</file>
     <file>green_light.png</file>
   </qresource>
