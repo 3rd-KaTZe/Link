@@ -5,7 +5,7 @@ __version__ = '5009'
 
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QTextCursor, QPixmap, QImage
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject, QByteArray
 from PyQt5.QtWebSockets import QWebSocketServer
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
 from custom_logging import mkLogger, logged
@@ -89,6 +89,7 @@ def ws_server():
                 try:
                     recv_msg = ws_protocol_00.readFrame(connexion.recv(1024))
                     KTZmain.ordre = recv_msg.strip('\u0000')
+                    print(KTZmain.ordre)
                     loopnb = 0
                 except:
                     print("WS_Server >> erreur reception WebSocket")
@@ -256,8 +257,8 @@ class WebSocket():
         disconnected = pyqtSignal()
         new_client_count = pyqtSignal(int)
         msg_from_ws = pyqtSignal(str)
-        client_sockets = []
-        client_threads = []
+        clients = []
+        clients_threads = []
 
         logger = None
         @logged
@@ -267,6 +268,8 @@ class WebSocket():
             ws_v2.closed.connect(self.on_close)
             self.__client_count = 0
             self.parent = parent
+            self.clients = []
+            self.clients_threads = []
 
         @pyqtSlot()
         def run(self):
@@ -276,7 +279,8 @@ class WebSocket():
         def start_listening(self):
             self.logger.debug('')
             if ws_v2.listen(QHostAddress.LocalHost, link_port):
-                ws_v2.newConnection.connect(self.on_new_connection)
+                pass
+                # ws_v2.newConnection.connect(self.on_new_connection)
 
         @pyqtSlot()
         def on_close(self):
@@ -286,27 +290,24 @@ class WebSocket():
         @pyqtSlot()
         def on_new_connection(self):
             self.logger.debug('')
-            # client_thread = QThread(self.parent)
-            # ws_clients.append(ws_v2.nextPendingConnection())
-            # client = ws_clients[len(ws_clients)-1]
+            client_thread = QThread(self)
             client = ws_v2.nextPendingConnection()
-            print(client.sendTextMessage('test1'))
             self.logger.debug(client)
-            # client.disconnected.connect(self.on_client_disconnect)
-            # client.binaryMessageReceived.connect(self.process_binary_message)
-            # client.textMessageReceived.connect(self.process_text_message)
-            # client.binaryFrameReceived.connect(self.process_binary_message)
-            # client.textFrameReceived.connect(self.process_text_message)
-            # client.pong.connect(self.on_pong)
-            # client.error.connect(self.on_error)
-            # client.moveToThread(client_thread)
+            client.sendTextMessage(json.dumps(KTZmain.Trans_Dico))
+            client.disconnected.connect(self.on_client_disconnect)
+            client.binaryMessageReceived.connect(self.process_binary_message)
+            client.textMessageReceived.connect(self.process_text_message)
+            client.binaryFrameReceived.connect(self.process_binary_frame)
+            client.textFrameReceived.connect(self.process_text_frame)
+            client.pong.connect(self.on_pong)
+            client.error.connect(self.on_error)
+            client.moveToThread(client_thread)
             # client.stateChanged.connect(self.on_state_changed)
             # self.parent.ws_clients.append(client)
-            # ws_clients.append(client)
-            # self.client_threads.append(client_thread)
-            client.sendTextMessage('test2')
+            self.clients.append(client)
+            self.clients_threads.append(client_thread)
+            client_thread.start()
             client.flush()
-            # client_thread.start()
 
         @pyqtSlot()
         def on_state_changed(self):
@@ -325,13 +326,27 @@ class WebSocket():
             # self.client_sockets.pop(i)
             self.new_client_count.emit(self.client_count)
 
-        @pyqtSlot(str)
-        def process_text_message(self, msg):
+        @pyqtSlot(QByteArray, bool)
+        def process_binary_frame(self, msg, is_last_frame):
+            self.logger.debug('')
             client = self.sender()
             self.logger.debug(msg)
 
-        @pyqtSlot(str)
+        @pyqtSlot(QByteArray, bool)
+        def process_text_frame(self, msg, is_last_frame):
+            self.logger.debug('')
+            client = self.sender()
+            self.logger.debug(msg)
+
+        @pyqtSlot(QByteArray)
+        def process_text_message(self, msg):
+            self.logger.debug('')
+            client = self.sender()
+            self.logger.debug(msg)
+
+        @pyqtSlot(QByteArray)
         def process_binary_message(self, msg):
+            self.logger.debug('')
             client = self.sender()
             self.logger.debug(msg)
 
@@ -491,7 +506,8 @@ class Gui():
             self.setupUi(self)
             self.show()
 
-            self.ws_clients = []
+            self.clients = []
+            ws_v2.newConnection.connect(self.on_new_connection)
 
             self.logger_thread = QThread(self)
             self.logger_handler = Gui.LoggingHandler()
@@ -525,6 +541,80 @@ class Gui():
             self.ws_pinger.moveToThread(self.ws_pinger_thread)
             self.ws_pinger_thread.started.connect(self.ws_pinger.run)
             # self.ws_pinger_thread.start()
+
+
+        @pyqtSlot()
+        def on_new_connection(self):
+            self.logger.debug('')
+            # client_thread = QThread(self)
+            client = ws_v2.nextPendingConnection()
+            self.logger.debug(client)
+            # client.sendTextMessage(json.dumps(KTZmain.Trans_Dico))
+            client.disconnected.connect(self.on_client_disconnect)
+            client.binaryMessageReceived.connect(self.process_binary_message)
+            client.textMessageReceived.connect(self.process_text_message)
+            client.binaryFrameReceived.connect(self.process_binary_frame)
+            client.textFrameReceived.connect(self.process_text_frame)
+            client.pong.connect(self.on_pong)
+            client.error.connect(self.on_error)
+            # client.moveToThread(client_thread)
+            client.stateChanged.connect(self.on_state_changed)
+            # self.parent.ws_clients.append(client)
+            self.clients.append(client)
+            # self.clients_threads.append(client_thread)
+            # client_thread.start()
+            client.flush()
+
+        @pyqtSlot()
+        def on_close(self):
+            self.logger.debug('')
+            ws_v2.newConnection.disconnect()
+
+        @pyqtSlot(int, str)
+        def on_pong(self, elapsed_time, payload):
+            self.logger.debug(elapsed_time)
+
+        @pyqtSlot()
+        def on_state_changed(self):
+            client = self.sender()
+            self.logger.debug(client.state())
+
+        @pyqtSlot()
+        def on_error(self):
+            client = self.sender()
+            self.logger.error(client.error())
+
+        @pyqtSlot()
+        def on_client_disconnect(self):
+            self.logger.debug('')
+            client = self.sender()
+            # self.client_sockets.pop(i)
+            self.new_client_count.emit(self.client_count)
+
+        @pyqtSlot(QByteArray, bool)
+        def process_binary_frame(self, msg, is_last_frame):
+            self.logger.debug('')
+            client = self.sender()
+            self.logger.debug(msg)
+
+        @pyqtSlot(QByteArray, bool)
+        def process_text_frame(self, msg, is_last_frame):
+            self.logger.debug('')
+            client = self.sender()
+            self.logger.debug(msg)
+
+        @pyqtSlot(QByteArray)
+        def process_text_message(self, msg):
+            self.logger.debug('')
+            client = self.sender()
+            self.logger.debug(msg)
+
+        @pyqtSlot(QByteArray)
+        def process_binary_message(self, msg):
+            self.logger.debug('')
+            client = self.sender()
+            self.logger.debug(msg)
+
 
 
         @pyqtSlot(str)
@@ -571,10 +661,9 @@ if __name__ == "__main__":
     cach3_port = int(Data_Config["ts_port"])
     link_hote = Data_Config["link_hote"]
     link_port = int(Data_Config["link_port"])
-    
+
     sioc_socket_v2 = QTcpSocket()
     ws_v2 = QWebSocketServer('', QWebSocketServer.NonSecureMode)
-    ws_clients = []
 
     qt_app = QApplication(sys.argv)
     main_ui = Gui.Main()
