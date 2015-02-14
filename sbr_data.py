@@ -21,30 +21,25 @@ def read_data_dico():
 
 
 
-    DD={}
-    DicoFichier = open("z_Data_Dico.csv", "r")
+    ret={}
+    with open("z_Data_Dico.csv") as f:
+        lines = f.readlines()
+    for l in lines:
+        x = l.strip('"\n').split(',')
+        ret[int(x[0])] = (x[1], float(x[2]))
+    return ret
     #print("sbr_data >> Chargement de DataDico\n")
 
-    while 1:
-        ligne = DicoFichier.readline()
-        if not ligne:
-            break
-
-        dicodata = ligne.strip('"\n')
-        #print(dicodata)
-
-        elementS = dicodata.split(",")
-        # Les Données sont lus sous forme, de trois éléments
-        # La Première est l'Offset Sioc
-        # La deuxième est l'étiquette utilisée par le KaTZ-Pit
-        # La troisième est le gain (multiplicateur pour obtenir la vrai valeur
-
-        #On renvoi un Dictionnaire comportant comme clé l'OffSet de SIOC
-        # Les deux autres éléments (étiquette,Gain) sont envoyés comme tupple
-        DD[int(elementS[0])]=(elementS[1],float(elementS[2]))
-
-    print (DD)
-    return DD
+    # while 1:
+    #     line = DicoFichier.readline()
+    #     if not line:
+    #         break
+    #     dicodata = line.strip('"\n')
+    #     e = dicodata.split(",")
+    #     data_dico[int(e[0])]=(e[1],float(e[2]))
+    #
+    # # print (DD)
+    # return data_dico
 
 def read_config():
     ret = {}

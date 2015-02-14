@@ -251,50 +251,57 @@ class SiocClient(QObject):
         self.logger.debug('')
         QObject.__init__(self)
         data_dico = sbr_data.read_data_dico()
-        self.data_import = ''.join(["Arn.Inicio:"] + [str(x) for x in data_dico]+ ['\n'])
+        self.data_import = ''.join(["Arn.Inicio:"] + ['{}:'.format(x) for x in data_dico]+ ['\n'])
 
 
     @pyqtSlot()
     def run(self):
-        sioc_socket.stateChanged.connect(self.on_state_changed)
-        sioc_socket.error.connect(self.on_error)
-        sioc_socket.disconnected.connect(self.connect_to_sioc)
-        sioc_socket.readyRead.connect(self.read_data)
+        sioc_socket_v2.stateChanged.connect(self.on_state_changed)
+        sioc_socket_v2.error.connect(self.on_error)
+        sioc_socket_v2.disconnected.connect(self.connect_to_sioc)
+        sioc_socket_v2.readyRead.connect(self.read_data)
         self.connect_to_sioc()
 
     @pyqtSlot()
     def connect_to_sioc(self):
-        self.logger.debug('connexion à l\'ami SIOC à l\'adresse {}:{}'.format(sioc_hote, sioc_port))
-        while not sioc_socket.state() == 3:
-            sioc_socket.connectToHost(sioc_hote, sioc_port)
-            if sioc_socket.waitForConnected(1000):
+        # self.logger.debug('connexion à l\'ami SIOC à l\'adresse {}:{}'.format(sioc_hote, sioc_port))
+        while not sioc_socket_v2.state() == 3:
+            sioc_socket_v2.connectToHost(sioc_hote, sioc_port)
+            if sioc_socket_v2.waitForConnected(1000):
                 self.connected.emit()
-                sioc_socket.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
-                self.write_data(self.data_import.encode())
+                sioc_socket_v2.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
+                sioc_socket_v2.setSocketOption(QAbstractSocket.LowDelayOption, 1)
+                self.write_data(self.data_import)
             else:
                 self.disconnected.emit()
+        self.connected.emit()
 
     @pyqtSlot()
     def on_state_changed(self):
-        self.logger.debug('statut: {}'.format(self.STATE_DIC[sioc_socket.state()]))
+        self.logger.debug('statut: {}'.format(self.STATE_DIC[sioc_socket_v2.state()]))
 
     @pyqtSlot()
     def on_error(self):
-        self.logger.error(self.ERROR_DIC[sioc_socket.error()])
+        if sioc_socket_v2.error() in [1]:
+            return
+        self.logger.error(self.ERROR_DIC[sioc_socket_v2.error()])
 
     @pyqtSlot()
     def read_data(self):
-        self.logger.debug('données disponibles en lecture')
-        while True:
-            msg = sioc_socket.read(4096)
-            print(msg)
-            if msg == b'':
+        # self.logger.debug('données disponibles en lecture')
+        while not sioc_socket_v2.atEnd():
+            msg = sioc_socket_v2.read(4096).decode().strip('\r\n')
+            if msg in ['Arn.Vivo:']:
+                self.msg_from_sioc.emit('SIOC ALIVE')  # DEBUG
                 break
-            self.msg_from_sioc.emit(msg.decode())
+            # self.logger.debug('message reçu: {}'.format(msg))
+            self.msg_from_sioc.emit(msg)
 
     @pyqtSlot(str)
-    def write_data(self, data):
-        sioc_socket.write(data)
+    def write_data(self, msg):
+        sioc_socket_v2.writeData(msg.encode())
+        if not sioc_socket_v2.waitForBytesWritten(1000):
+            self.logger.error('erreur lors de l\'écriture sur le socket')
 
 
 class Gui():
@@ -308,7 +315,6 @@ class Gui():
 
         def __init__(self):
             QObject.__init__(self)
-            # Handler.__init__(self)
             self.q = Queue()
 
         def emit(self, record):
@@ -341,9 +347,9 @@ class Gui():
 
             self.sioc_thread = QThread(self)
             self.sioc_client = SiocClient()
-            sioc_socket.connected.connect(self.on_sioc_connect)
-            sioc_socket.disconnected.connect(self.on_sioc_disconnect)
-            self.sioc_client.msg_from_sioc.connect(self.log)
+            sioc_socket_v2.connected.connect(self.on_sioc_connect)
+            sioc_socket_v2.disconnected.connect(self.on_sioc_disconnect)
+            self.sioc_client.msg_from_sioc.connect(self.on_sioc_msg)
             self.sioc_client.moveToThread(self.sioc_thread)
             self.sioc_thread.started.connect(self.sioc_client.run)
             self.sioc_thread.start()
@@ -362,6 +368,10 @@ class Gui():
         def on_sioc_disconnect(self):
             self.sioc_state_pic.setPixmap(QPixmap(':/pics/red_light.png'))
 
+        @pyqtSlot(str)
+        def on_sioc_msg(self, msg):
+            self.logger.debug('message SIOC: {}'.format(msg))
+
 # Main Programme
 if __name__ == "__main__":
     logger = mkLogger('__main__')
@@ -375,18 +385,12 @@ if __name__ == "__main__":
     link_port = int(Data_Config["link_port"])
     
     
-    sioc_socket = QTcpSocket()
+    sioc_socket_v2 = QTcpSocket()
+    pit_socket_v2 = QWebSocket()
 
     qt_app = QApplication(sys.argv)
     main_ui = Gui.Main()
-    # main_ui.setWindowIcon(ekpi_icon)
     _exit(qt_app.exec())
-    # main_ui.run()
-
-    sioc_socket = SiocClient(sioc_hote, sioc_port)
-    while 1:
-        pass
-    exit(0)
 
 
     msg = "Configuration du Helo-Link : \n\n" + "Sioc IP = " + str(sioc_hote) + " ;  Sioc Port = " + str(
