@@ -19,6 +19,7 @@ def Sioc_Read(Sioc_Data):
     #print ("Sioc_Read_function : Recu de Main > ",json.dumps(Sioc_Data),"\n")
 
     #Test si message tronqué, alors envoi erreur canal 5
+    print('sioc_Data: {}'.format(Sioc_Data))
     if len(Sioc_Data)<3:
         Sioc_Data="Arn.Resp:5=1:\r\n"
 
@@ -38,6 +39,7 @@ def Sioc_Read(Sioc_Data):
 
     #stockage dans le dictionnaire
     for elmt in dataS1:
+        print(elmt)
         elementS = elmt.split("=")
         ST[int(elementS[0])]=int(elementS[1])
 

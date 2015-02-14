@@ -26,6 +26,6 @@ setup(  name = 'KATZE_LINK',
         options = {'build_exe': build_exe_options},
         executables = [
             Executable('helo_link.py',
-                       base=base,
-            )],
-        )
+                       base=base, requires=['PyQt5'],
+            )]
+)
