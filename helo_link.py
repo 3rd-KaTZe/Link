@@ -372,7 +372,7 @@ class Gui():
             msg = msg.strip('\u0000')
             # self.logger.debug('message Pit: {}'.format(msg))
             # send ACK
-            self.server.write_data(dumps(ack_dico))
+            # self.server.write_data(dumps(ack_dico))
             chan = int(msg.split('=')[0])
             if chan == 4:
                 # TODO: CACH3
