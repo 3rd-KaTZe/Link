@@ -4,4 +4,7 @@
     <file>red_light.png</file>
     <file>green_light.png</file>
   </qresource>
+  <qresource prefix="ico">
+    <file>link.ico</file>
+  </qresource>
 </RCC>

@@ -21,12 +21,13 @@ if sys.platform == 'win32':
     # base = 'console'
 
 setup(  name = 'KATZE_LINK',
-        version = __version__,
+        version = __version__.replace('alpha', '0.0.0.').replace('beta', '0.0.'),
         description = "Katze Link",
         options = {'build_exe': build_exe_options},
         executables = [
             Executable('helo_link.py',
                        base=base,
+                       icon='./ui/link.ico',
             )],
         requires=['PyQt5', 'wmi'],
 )

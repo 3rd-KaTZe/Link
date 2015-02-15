@@ -1,6 +1,6 @@
 # coding=utf-8
 __author__ = 'etcher3rd'
-__version__ = "0.0.2"
+__version__ = "alpha3"
 __guid__ = '34dbf25d-1efc-4d19-956f-6f276f4fb78d'
 
 import sys

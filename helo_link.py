@@ -11,7 +11,7 @@ import wmi
 from main import __version__
 from os import _exit
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QTextCursor, QPixmap, QIntValidator
+from PyQt5.QtGui import QTextCursor, QPixmap, QIntValidator, QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, QObject, QByteArray, QTimer
 from PyQt5.QtWebSockets import QWebSocketServer
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
@@ -154,7 +154,7 @@ class WebSocketServer(QWebSocketServer):
 
     def start_listening(self):
         self.logger.info('ouverture du socket WebServer pour le Katze Pit')
-        if not self.listen(QHostAddress.LocalHost, link_port):
+        if not self.listen(QHostAddress.Any, link_port):
             self.logger.error(ERROR_DIC[self.error()])
         else:
             self.logger.info('socket ouvert, en attente de client')
@@ -428,11 +428,6 @@ class Gui():
 
 
 def raise_dcs_window(refresh_pid=False):
-    # def callback(hwnd, hwnds):
-    # _, pid = win32process.GetWindowThreadProcessId(hwnd)
-    # # print(pid)
-    #     if pid == dcs_pid:
-    #         hwnds.append(hwnd)
     global dcs_pid
     if dcs_pid is None or refresh_pid:
         c = wmi.WMI()
@@ -442,19 +437,10 @@ def raise_dcs_window(refresh_pid=False):
         if dcs_pid is None:
             logger.warning('le processus DCS.exe n\'a pas été trouvé')
             return
-    # hwnds = []
-    # win32gui.EnumWindows(callback, hwnds)
-    # if hwnds:
-    #     for hwnd in hwnds:
-    #         win32gui.SetForegroundWindow(hwnd)
-    #         return True
     shell.AppActivate(dcs_pid)
     shell.SendKeys('')
     return True
 
-
-# Main Programme
-# if __name__ == "__main__":
 dcs_pid = None
 shell = win32com.client.Dispatch("WScript.Shell")
 logger = mkLogger('__main__')
@@ -471,5 +457,7 @@ link_port = int(data_config["link_port"])
 sioc_socket_v2 = QTcpSocket()
 
 qt_app = QApplication(sys.argv)
+link_icon = QIcon(':/ico/link.ico')
 ui_main = Gui.Main()
+ui_main.setWindowIcon(link_icon)
 _exit(qt_app.exec())
