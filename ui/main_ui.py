@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main.ui'
 #
-# Created: Sun Feb 15 02:35:51 2015
+# Created: Sun Feb 15 02:49:23 2015
 #      by: PyQt5 UI code generator 5.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -38,9 +38,6 @@ class Ui_MainWindow(object):
         self.ws_state_pic.setText("")
         self.ws_state_pic.setPixmap(QtGui.QPixmap(":/pics/red_light.png"))
         self.ws_state_pic.setObjectName("ws_state_pic")
-        self.test = QtWidgets.QPushButton(self.centralwidget)
-        self.test.setGeometry(QtCore.QRect(610, 70, 75, 23))
-        self.test.setObjectName("test")
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setGeometry(QtCore.QRect(275, 70, 181, 20))
         self.label_3.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
@@ -89,7 +86,6 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "SIOC"))
         self.label_2.setText(_translate("MainWindow", "KatzePit"))
-        self.test.setText(_translate("MainWindow", "PushButton"))
         self.label_3.setText(_translate("MainWindow", "Nombre de pits connectés:"))
         self.clients_count.setText(_translate("MainWindow", "0"))
         self.label_4.setText(_translate("MainWindow", "Focus DCS"))

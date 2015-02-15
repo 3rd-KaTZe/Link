@@ -1,8 +1,6 @@
 # coding=utf-8
 __author__ = 'etcher3rd'
 
-
-
 import sys
 import threading
 import sbr_string
@@ -13,8 +11,8 @@ import wmi
 from main import __version__
 from os import _exit
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QTextCursor, QPixmap, QImage, QIntValidator
-from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject, QByteArray, QTimer
+from PyQt5.QtGui import QTextCursor, QPixmap, QIntValidator
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, QObject, QByteArray, QTimer
 from PyQt5.QtWebSockets import QWebSocketServer
 from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
 from custom_logging import mkLogger, logged
@@ -24,8 +22,6 @@ from ui import main_ui
 from json import dumps
 
 
-
-KTZmain = sys.modules['__main__']
 ordre = ""
 msgSioc = ""
 Sioc_Dico = {}
@@ -73,21 +69,23 @@ ERROR_DIC = {
     18: 'réponse innatendue de la part du serveur proxy'
 }
 
-class SiocClient(QObject):
 
+class SiocClient(QObject):
     connected = pyqtSignal()
     disconnected = pyqtSignal()
     msg_from_sioc = pyqtSignal(str)
 
     logger = None
+
     @logged
     def __init__(self):
+        global data_dico
         self.logger.debug('')
         QObject.__init__(self)
         data_dico = sbr_data.read_data_dico()
-        self.data_import = ''.join(["Arn.Inicio:"] + ['{}:'.format(x) for x in data_dico]+ ['\n'])
+        self.data_import = ''.join(["Arn.Inicio:"] + ['{}:'.format(x) for x in data_dico] + ['\n'])
 
-
+    # noinspection PyUnresolvedReferences
     @pyqtSlot()
     def run(self):
         sioc_socket_v2.stateChanged.connect(self.on_state_changed)
@@ -139,11 +137,11 @@ class SiocClient(QObject):
 
 
 class WebSocketServer(QWebSocketServer):
-
     msg_from_pit = pyqtSignal(str)
 
     new_client_count = pyqtSignal(int)
     logger, clients = None, []
+
     @logged
     def __init__(self, *args, **kwargs):
         self.logger.debug('')
@@ -154,8 +152,8 @@ class WebSocketServer(QWebSocketServer):
         if not self.listen(QHostAddress.LocalHost, link_port):
             self.logger.error(ERROR_DIC[self.error()])
         else:
+            # noinspection PyUnresolvedReferences
             self.newConnection.connect(self.on_new_connection)
-
 
     @pyqtSlot()
     def on_new_connection(self):
@@ -181,7 +179,7 @@ class WebSocketServer(QWebSocketServer):
         self.ws_v2.newConnection.disconnect()
 
     @pyqtSlot(int, str)
-    def on_pong(self, elapsed_time, payload):
+    def on_pong(self, elapsed_time, _):
         self.logger.debug(elapsed_time)
 
     @pyqtSlot()
@@ -208,7 +206,6 @@ class WebSocketServer(QWebSocketServer):
         # self.logger.debug(msg)
         self.msg_from_pit.emit(msg)
 
-
     @pyqtSlot(str)
     def write_data(self, msg):
         # self.logger.debug(msg)
@@ -218,13 +215,14 @@ class WebSocketServer(QWebSocketServer):
 
 
 class FocusDCS(QObject):
-
     logger = None
+
     @logged
     def __init__(self):
         self.logger.debug('')
         QObject.__init__(self)
         self.timer = QTimer()
+        # noinspection PyUnresolvedReferences
         self.timer.timeout.connect(self.on_timeout)
         self.__is_running = False
 
@@ -247,7 +245,6 @@ class FocusDCS(QObject):
 
 
 class Gui():
-
     def __init__(self):
         pass
 
@@ -283,16 +280,11 @@ class Gui():
             self.setupUi(self)
             self.setWindowTitle('Katze Link v{}'.format(__version__))
             self.show()
-
             self.start_logger_handler()
-
             self.start_sioc_client()
-
             self.start_ws_server()
-
             self.start_dcs_focus_timer()
-
-            self.test.clicked.connect(lambda: self.server.write('{}'))
+            # noinspection PyUnresolvedReferences
             self.dcs_focus_button.clicked.connect(self.on_dcs_focus_button_state_clicked)
             self.dcs_focus_timeout.setValidator(QIntValidator(50, 5000))
 
@@ -303,6 +295,7 @@ class Gui():
             formatter = Formatter('%(levelname)s - %(name)s - %(funcName)s - %(message)s')
             self.logger_handler.setFormatter(formatter)
             self.logger_handler.moveToThread(self.logger_thread)
+            # noinspection PyUnresolvedReferences
             self.logger_thread.started.connect(self.logger_handler.run)
             self.logger_handler.sig_send_text.connect(self.log)
             logger.addHandler(self.logger_handler)
@@ -312,10 +305,13 @@ class Gui():
         def start_sioc_client(self):
             self.sioc_thread = QThread(self)
             self.sioc_client = SiocClient()
+            # noinspection PyUnresolvedReferences
             sioc_socket_v2.connected.connect(self.on_sioc_connect)
+            # noinspection PyUnresolvedReferences
             sioc_socket_v2.disconnected.connect(self.on_sioc_disconnect)
             self.sioc_client.msg_from_sioc.connect(self.on_sioc_msg)
             self.sioc_client.moveToThread(self.sioc_thread)
+            # noinspection PyUnresolvedReferences
             self.sioc_thread.started.connect(self.sioc_client.run)
             self.sioc_thread.start()
 
@@ -371,7 +367,7 @@ class Gui():
             self.server.write_data(dumps(ack_dico))
             chan = int(msg.split('=')[0])
             if chan == 4:
-                #TODO: CACH3
+                # TODO: CACH3
                 pass
             if chan == 5:
                 # self.logger.error('erreur Pit: {}'.format(msg))
@@ -381,7 +377,6 @@ class Gui():
             msg = 'Arn.Resp:{}:\n'.format(msg)
             # self.logger.debug('envoi du message à SIOC: {}'.format(msg))
             self.sioc_client.write_data(msg)
-
 
         @pyqtSlot()
         def on_ws_listening(self):
@@ -424,11 +419,10 @@ class Gui():
                     self.dcs_focus_timer.start(interval)
 
 
-
 def raise_dcs_window(refresh_pid=False):
     # def callback(hwnd, hwnds):
-    #     _, pid = win32process.GetWindowThreadProcessId(hwnd)
-    #     # print(pid)
+    # _, pid = win32process.GetWindowThreadProcessId(hwnd)
+    # # print(pid)
     #     if pid == dcs_pid:
     #         hwnds.append(hwnd)
     global dcs_pid
@@ -436,7 +430,7 @@ def raise_dcs_window(refresh_pid=False):
         c = wmi.WMI()
         dcs_pid = None
         for process in c.Win32_Process(name='dcs.exe'):
-                dcs_pid = process.ProcessId
+            dcs_pid = process.ProcessId
         if dcs_pid is None:
             logger.warning('le processus DCS.exe n\'a pas été trouvé')
             return
@@ -468,7 +462,6 @@ link_port = int(data_config["link_port"])
 
 sioc_socket_v2 = QTcpSocket()
 
-
 qt_app = QApplication(sys.argv)
-main_ui = Gui.Main()
+ui_main = Gui.Main()
 _exit(qt_app.exec())

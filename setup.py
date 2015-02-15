@@ -28,5 +28,5 @@ setup(  name = 'KATZE_LINK',
             Executable('helo_link.py',
                        base=base,
             )],
-        requires=['PyQt5'],
+        requires=['PyQt5', 'wmi'],
 )
