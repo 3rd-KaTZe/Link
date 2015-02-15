@@ -286,7 +286,7 @@ class Gui():
             self.logger.debug('')
             QMainWindow.__init__(self)
             self.setupUi(self)
-            self.setWindowTitle('Katze Link v{}'.format(__version__))
+            self.setWindowTitle('Katze Link {}'.format(__version__))
             self.show()
             self.start_logger_handler()
             self.start_sioc_client()
