@@ -1,8 +1,17 @@
 # coding=utf-8
 __author__ = 'etcher3rd'
-__version__ = '5009'
 
 
+
+import sys
+import threading
+import sbr_string
+import sbr_data
+import win32com.client
+import wmi
+
+from main import __version__
+from os import _exit
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QTextCursor, QPixmap, QImage, QIntValidator
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, Qt, QObject, QByteArray, QTimer
@@ -12,26 +21,7 @@ from custom_logging import mkLogger, logged
 from queue import Queue
 from logging import Handler, Formatter
 from ui import main_ui
-import win32com.client
-import wmi
-
-from os import _exit
-
-
-import os
-import socket
-import select
-import sys
-import threading
-import time
-import datetime
-import json
-import logging
-
-import ws_protocol_00
-import ws_handshake_00
-import sbr_string
-import sbr_data
+from json import dumps
 
 
 
@@ -40,10 +30,8 @@ ordre = ""
 msgSioc = ""
 Sioc_Dico = {}
 Trans_Dico = {}
-AR_Dico = {'Ordre1': 0, 'Ordre2': 0, 'PingBack': 0}
-Data_Dico = {}
-Data_Config = {}
-Com_Errors = 0
+ack_dico = {'Ordre1': 0, 'Ordre2': 0, 'PingBack': 0}
+com_errors = 0
 
 ini_lock = threading.Lock()
 run_lock = threading.Lock()
@@ -52,161 +40,6 @@ Sioc_alive = False
 WS_run = True
 WS_alive = False
 pulse_ws = 100
-
-def ws_server():
-    time.sleep(2.0)
-    ini_lock.acquire()
-    print("WS_Server >> Start-up du serveur Web-Socket")
-    logger.info("WS_Server >> Start-up du serveur Web-Socket")
-    miaou = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
-    miaou.bind((link_hote, link_port))
-    miaou.listen(1)
-    print("WS-Server >> Ecoute sur le port {} \n".format(link_port))
-
-    ini_lock.release()
-    while KTZmain.WS_run:
-
-        print("-- WS-Serveur >> en attente d'un client\n")
-        connexion, adresse_client = miaou.accept()
-
-        s = "WS_Server >> Connection Recu de : " + str(adresse_client)
-        print(s)
-        connexion.send(ws_handshake_00.ws_handshake(connexion.recv(1024)))
-
-        # fin du hand Shake
-        print("WS_Server >> Connection Etablie")
-        KTZmain.WS_alive = True
-        miaou_in = [connexion]
-        miaou_out = [connexion]
-        loopnb = 0
-
-        ######################## Boucle secondaire de communication WS #####################################
-        while KTZmain.WS_alive:
-
-            run_lock.acquire()
-            loopnb += 1
-            ready_to_read, ready_to_write, in_error = select.select(miaou_in, miaou_out, miaou_in, 0.05)
-            for _ in ready_to_read:
-                try:
-                    recv_msg = ws_protocol_00.readFrame(connexion.recv(1024))
-                    KTZmain.ordre = recv_msg.strip('\u0000')
-                    print(KTZmain.ordre)
-                    loopnb = 0
-                except:
-                    print("WS_Server >> erreur reception WebSocket")
-            trans_msg = json.dumps(KTZmain.Trans_Dico)
-
-            try:
-                connexion.send(ws_protocol_00.createFrame(trans_msg))
-
-            except:
-                print("WS_Server >> erreur envoi WebSocket")
-            KTZmain.Trans_Dico = {}
-            if loopnb > KTZmain.pulse_ws:
-                KTZmain.WS_alive = False
-            if len(KTZmain.ordre) > 0:
-                ar_msg = json.dumps(KTZmain.AR_Dico)
-                try:
-                    connexion.send(ws_protocol_00.createFrame(ar_msg))
-                except:
-                    print("WS_Server >> erreur envoi WebSocket")
-            run_lock.release()
-            time.sleep(0.1)
-        print("WS_Server >> Liaison avec le KaTZ-Pit Interrompue")
-        connexion.close()
-
-# noinspection PyBroadException
-def sioc_client():
-    ini_lock.acquire()
-    print("Sioc-Thread >> Démarrage Sioc_Client et Cach3_Client" + "\n")
-    KTZmain.Data_Dico = sbr_data.read_data_dico()
-    data_import = "Arn.Inicio:"
-    for d in KTZmain.Data_Dico:
-        #print(d)
-        data_import = data_import + str(d) + ":"
-        #print(data_import)
-
-    data_import += "\n"
-
-    print("Cach3_Client : Creation de la connection TS3" + "\n")
-    cach3_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    while KTZmain.Sioc_run is True:
-
-        retry_sioc = True
-
-        while retry_sioc is True:
-
-            try:
-                print("Sioc_Client : Tentative de Connection")
-                sioc_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                sioc_socket.connect((sioc_hote, sioc_port))
-                sioc_socket.sendall(data_import.encode())
-                _ = sioc_socket.recv(1024).decode()
-
-                s = "Sioc_Client : Connection SIOC Etablie" + "\n"
-                print(s)
-                retry_sioc = False
-                KTZmain.Sioc_alive = True
-
-            except socket.error:
-                print("Sioc_Client : Connection SIOC Echouée\n")
-                print("Sioc_Client : SIOC est il bien démarré ?\n")
-                print("Sioc_Client : Vérifier les paramêtres de connection à SIOC")
-                print("Sioc_Client : IP = " + str(sioc_hote) + "   :   Port = " + str(sioc_port) + "\n")
-                print("Sioc_Client : Nouvel Essai dans 15 secondes" + "\n")
-                time.sleep(15.0)
-        ini_lock.release()
-
-        time.sleep(2.0)
-        while KTZmain.Sioc_alive:
-            run_lock.acquire()
-            if len(KTZmain.ordre) > 0:
-                chan = KTZmain.ordre.split("=")
-                if int(chan[0]) == 4:
-                    switch = chan[1]
-                    cach3_socket.sendto(switch.encode(), (cach3_hote, cach3_port))
-                if int(chan[0]) == 5:
-                    KTZmain.Com_Errors += 1
-                    KTZmain.ordre = "5=" + str(KTZmain.Com_Errors)
-                msg_cmd = "Arn.Resp:" + KTZmain.ordre + ":\n"
-
-                try:
-                    sioc_socket.sendall(msg_cmd.encode())
-
-                except:
-                    print("SIOC Loop >> Erreur de transmission avec SIOC")
-                    print("SIOC Loop >> Vérifier que SIOC est toujours en marche")
-                    KTZmain.Sioc_alive = False
-                print("Envoyé à SIOC >" + msg_cmd)
-                KTZmain.ordre = ""
-            _now = datetime.datetime.now()
-            pulse = _now.hour * 3600 + _now.minute * 60 + _now.second
-            pulse_msg = "Arn.Resp:9=" + str(pulse) + ":\n"
-            try:
-                sioc_socket.sendall(pulse_msg.encode())
-
-            except:
-                print("SIOC Loop >> Erreur de transmission avec SIOC")
-                print("SIOC Loop >> Vérifier que SIOC est toujours en marche\n")
-                KTZmain.Sioc_alive = False
-            try:
-                KTZmain.msgSioc = sioc_socket.recv(4096).decode()
-            except:
-                print("SIOC Loop >>  Erreur Reception Message\n")
-                KTZmain.msgSioc = "5=1"
-            KTZmain.Sioc_Dico = sbr_string.Sioc_Read(KTZmain.msgSioc)
-            for cle in KTZmain.Sioc_Dico:
-                KTZmain.Trans_Dico[KTZmain.Data_Dico[cle][0]] = round((KTZmain.Sioc_Dico[cle] * KTZmain.Data_Dico[cle][1]), 0)
-            KTZmain.Sioc_Dico = {}
-            run_lock.release()
-            time.sleep(0.1)
-
-        print("SIOC Loop >> Fin de communication avec SIOC")
-        print("SIOC Loop >> Fermeture de la socket")
-        sioc_socket.close()
-        print("SIOC Loop >> Tentative de reconnection\n")
-        ini_lock.acquire()
 
 STATE_DIC = {
     0: 'déconnecté',
@@ -293,7 +126,7 @@ class SiocClient(QObject):
         while not sioc_socket_v2.atEnd():
             msg = sioc_socket_v2.read(4096).decode().strip('\r\n')
             if msg in ['Arn.Vivo:']:
-                self.msg_from_sioc.emit('SIOC ALIVE')  # DEBUG
+                # self.msg_from_sioc.emit('SIOC ALIVE')  # DEBUG
                 break
             # self.logger.debug('message reçu: {}'.format(msg))
             self.msg_from_sioc.emit(msg)
@@ -306,6 +139,8 @@ class SiocClient(QObject):
 
 
 class WebSocketServer(QWebSocketServer):
+
+    msg_from_pit = pyqtSignal(str)
 
     new_client_count = pyqtSignal(int)
     logger, clients = None, []
@@ -369,21 +204,16 @@ class WebSocketServer(QWebSocketServer):
 
     @pyqtSlot(QByteArray)
     def process_text_message(self, msg):
-        self.logger.debug('')
-        client = self.sender()
-        self.logger.debug(msg)
+        # client = self.sender()
+        # self.logger.debug(msg)
+        self.msg_from_pit.emit(msg)
 
-    @pyqtSlot(QByteArray)
-    def process_binary_message(self, msg):
-        self.logger.debug('')
-        client = self.sender()
-        self.logger.debug(msg)
 
     @pyqtSlot(str)
-    def write(self, msg):
-        self.logger.debug('')
+    def write_data(self, msg):
+        # self.logger.debug(msg)
         for client in self.clients:
-            self.logger.debug(client)
+            # self.logger.debug(client)
             client.sendTextMessage(msg)
 
 
@@ -451,11 +281,12 @@ class Gui():
             self.logger.debug('')
             QMainWindow.__init__(self)
             self.setupUi(self)
+            self.setWindowTitle('Katze Link v{}'.format(__version__))
             self.show()
 
             self.start_logger_handler()
 
-            # self.start_sioc_client()
+            self.start_sioc_client()
 
             self.start_ws_server()
 
@@ -486,7 +317,7 @@ class Gui():
             self.sioc_client.msg_from_sioc.connect(self.on_sioc_msg)
             self.sioc_client.moveToThread(self.sioc_thread)
             self.sioc_thread.started.connect(self.sioc_client.run)
-            # self.sioc_thread.start()
+            self.sioc_thread.start()
 
         @pyqtSlot()
         def start_ws_server(self):
@@ -495,6 +326,8 @@ class Gui():
             self.server.start_listening()
             if self.server.isListening():
                 self.server.new_client_count.connect(self.on_client_count_change)
+                self.server.msg_from_pit.connect(self.on_pit_msg)
+                self.on_ws_listening()
 
         @pyqtSlot()
         def start_dcs_focus_timer(self):
@@ -502,8 +335,6 @@ class Gui():
             self.dcs_focus_timer = FocusDCS()
             self.dcs_focus_timer.moveToThread(self.dcs_focus_timer_thread)
             self.dcs_focus_timer_thread.start()
-
-
 
         @pyqtSlot(str)
         def log(self, text):
@@ -519,8 +350,38 @@ class Gui():
             self.sioc_state_pic.setPixmap(QPixmap(':/pics/red_light.png'))
 
         @pyqtSlot(str)
-        def on_sioc_msg(self, msg):
-            self.logger.debug('message SIOC: {}'.format(msg))
+        def on_sioc_msg(self, msglist):
+            # self.logger.debug('message SIOC brut: {}'.format(msglist))
+            for msg in msglist.split('\r\n'):
+                # self.logger.debug('raw splitted message: {}'.format(msg))
+                if msg in ['Arn.Vivo:'] or not msg:
+                    continue
+                # self.logger.debug('message SIOC: {}'.format(msg))
+                formatted_msg = sbr_string.sioc_read(msg)
+                dic = {}
+                for k in formatted_msg.keys():
+                    dic[data_dico[k][0]] = round(formatted_msg[k] * data_dico[k][1], 0)
+                self.server.write_data(dumps(dic))
+
+        @pyqtSlot(str)
+        def on_pit_msg(self, msg):
+            msg = msg.strip('\u0000')
+            # self.logger.debug('message Pit: {}'.format(msg))
+            # send ACK
+            self.server.write_data(dumps(ack_dico))
+            chan = int(msg.split('=')[0])
+            if chan == 4:
+                #TODO: CACH3
+                pass
+            if chan == 5:
+                # self.logger.error('erreur Pit: {}'.format(msg))
+                global com_errors
+                com_errors += 1
+                msg = '5={}'.format(com_errors)
+            msg = 'Arn.Resp:{}:\n'.format(msg)
+            # self.logger.debug('envoi du message à SIOC: {}'.format(msg))
+            self.sioc_client.write_data(msg)
+
 
         @pyqtSlot()
         def on_ws_listening(self):
@@ -542,6 +403,10 @@ class Gui():
         def on_client_count_change(self, i):
             self.logger.debug(i)
             self.clients_count.setText(str(i))
+            if i == 0:
+                self.on_ws_listening()
+            else:
+                self.on_ws_connect()
 
         @pyqtSlot()
         def on_dcs_focus_button_state_clicked(self):
@@ -561,6 +426,11 @@ class Gui():
 
 
 def raise_dcs_window(refresh_pid=False):
+    # def callback(hwnd, hwnds):
+    #     _, pid = win32process.GetWindowThreadProcessId(hwnd)
+    #     # print(pid)
+    #     if pid == dcs_pid:
+    #         hwnds.append(hwnd)
     global dcs_pid
     if dcs_pid is None or refresh_pid:
         c = wmi.WMI()
@@ -570,46 +440,35 @@ def raise_dcs_window(refresh_pid=False):
         if dcs_pid is None:
             logger.warning('le processus DCS.exe n\'a pas été trouvé')
             return
-    shell = win32com.client.Dispatch("WScript.Shell")
+    # hwnds = []
+    # win32gui.EnumWindows(callback, hwnds)
+    # if hwnds:
+    #     for hwnd in hwnds:
+    #         win32gui.SetForegroundWindow(hwnd)
+    #         return True
     shell.AppActivate(dcs_pid)
+    shell.SendKeys('')
     return True
 
 
 # Main Programme
-if __name__ == "__main__":
-    dcs_pid = None
-    logger = mkLogger('__main__')
-    Data_Config = sbr_data.read_config()
-    sioc_hote = Data_Config["sioc_hote"]
-    sioc_port = int(Data_Config["sioc_port"])
-    sioc_plage = int(Data_Config["sioc_plage"])
-    cach3_hote = Data_Config["ts_hote"]
-    cach3_port = int(Data_Config["ts_port"])
-    link_hote = Data_Config["link_hote"]
-    link_port = int(Data_Config["link_port"])
+# if __name__ == "__main__":
+dcs_pid = None
+shell = win32com.client.Dispatch("WScript.Shell")
+logger = mkLogger('__main__')
+data_config = sbr_data.read_config()
+data_dico = sbr_data.read_data_dico()
+sioc_hote = data_config["sioc_hote"]
+sioc_port = int(data_config["sioc_port"])
+sioc_plage = int(data_config["sioc_plage"])
+cach3_hote = data_config["ts_hote"]
+cach3_port = int(data_config["ts_port"])
+link_hote = data_config["link_hote"]
+link_port = int(data_config["link_port"])
 
-    sioc_socket_v2 = QTcpSocket()
-
-
-    qt_app = QApplication(sys.argv)
-    main_ui = Gui.Main()
-    _exit(qt_app.exec())
+sioc_socket_v2 = QTcpSocket()
 
 
-    msg = "Configuration du Helo-Link : \n\n" + "Sioc IP = " + str(sioc_hote) + " ;  Sioc Port = " + str(
-        sioc_port) + " ;  Décalage des offsets = " + str(sioc_plage)
-    print(msg)
-    link_hote = Data_Config["link_hote"]
-    link_port = int(Data_Config["link_port"])
-    msg1 = "WS IP = " + str(link_hote) + " ;  WS Port = " + str(link_port)
-    print(msg1)
-    cach3_hote = Data_Config["ts_hote"]
-    cach3_port = int(Data_Config["ts_port"])
-    msg2 = "Cach3 IP = " + str(cach3_hote) + " ;  Cach3 Port = " + str(cach3_port) + "\n"
-    print(msg2)
-    KtzWs_1 = threading.Thread(None, ws_server, "WS_Server_Thread", (), {})
-    KtzSioc_2 = threading.Thread(None, sioc_client, "Sioc_Server_Thread", (), {})
-    KtzWs_1.start()
-    KtzSioc_2.start()
-
-    #TODO: bug à la fermture, peut-être voir avec thread.join()
+qt_app = QApplication(sys.argv)
+main_ui = Gui.Main()
+_exit(qt_app.exec())

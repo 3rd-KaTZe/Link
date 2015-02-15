@@ -4,7 +4,7 @@ import sys
 from cx_Freeze import setup, Executable
 
 
-from helo_link import __version__
+from main import __version__
 
 build_exe_options = {
     'packages': ['os', 'socket', 'sys', 'threading', 'json', 'select', 'time', 'datetime'],
@@ -17,8 +17,8 @@ build_exe_options = {
 base = None
 
 if sys.platform == 'win32':
-    # base = 'Win32GUI'
-    base = 'console'
+    base = 'Win32GUI'
+    # base = 'console'
 
 setup(  name = 'KATZE_LINK',
         version = __version__,
@@ -26,6 +26,7 @@ setup(  name = 'KATZE_LINK',
         options = {'build_exe': build_exe_options},
         executables = [
             Executable('helo_link.py',
-                       base=base, requires=['PyQt5'],
-            )]
+                       base=base,
+            )],
+        requires=['PyQt5'],
 )
