@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main.ui'
 #
-# Created: Sun Feb 15 14:52:30 2015
+# Created: Sun Feb 15 17:58:44 2015
 #      by: PyQt5 UI code generator 5.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -90,7 +90,7 @@ class Ui_MainWindow(object):
         self.gridLayout_3.addLayout(self.horizontalLayout, 2, 2, 1, 1)
         self.horizontalLayout_3.addLayout(self.gridLayout_3)
         self.textBrowser = QtWidgets.QTextBrowser(self.horizontalLayoutWidget)
-        self.textBrowser.setEnabled(False)
+        self.textBrowser.setEnabled(True)
         self.textBrowser.setObjectName("textBrowser")
         self.horizontalLayout_3.addWidget(self.textBrowser)
         MainWindow.setCentralWidget(self.centralwidget)

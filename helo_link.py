@@ -436,6 +436,9 @@ def raise_dcs_window(refresh_pid=False):
             dcs_pid = process.ProcessId
         if dcs_pid is None:
             logger.warning('le processus DCS.exe n\'a pas été trouvé')
+            logger.info('notez que "DCS.exe" n\'existe QUE si vous êtes cockpit ou sur l\'interface multijoueur.')
+            logger.ingo('l\'interface principale de DCS (avec les options, l\'éditeur de mission etc...) ne '
+                        'compte pas')
             return
     shell.AppActivate(dcs_pid)
     shell.SendKeys('')
