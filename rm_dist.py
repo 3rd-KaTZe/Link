@@ -8,5 +8,5 @@ try:
     if exists('./exe.win32-3.4'):
         rmtree('./exe.win32-3.4')
 except:
-    print("Impossible de supprimer le dossier ./dist")
+    print("Impossible de supprimer le dossier ./exe.win32-3.4")
     exit(0)
