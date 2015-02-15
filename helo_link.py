@@ -82,7 +82,7 @@ class SiocClient(QObject):
 
     @pyqtSlot()
     def connect_to_sioc(self):
-        self.logger.info('connexion à l\'ami SIOC sur {}:{}'.format(sioc_hote, sioc_port))
+        self.logger.info('tentative de connexion à l\'ami SIOC sur {}:{}'.format(sioc_hote, sioc_port))
         while not sioc_socket_v2.state() == 3:
             sioc_socket_v2.connectToHost(sioc_hote, sioc_port)
             if sioc_socket_v2.waitForConnected(1000):
@@ -105,7 +105,8 @@ class SiocClient(QObject):
 
     @pyqtSlot()
     def on_error(self):
-        if sioc_socket_v2.error() in [1]:
+        if sioc_socket_v2.error() in [1, 5]:
+            self.logger.debug(ERROR_DIC[sioc_socket_v2.error()])
             return
         self.logger.error(ERROR_DIC[sioc_socket_v2.error()])
 
@@ -141,7 +142,13 @@ class WebSocketServer(QWebSocketServer):
     def start_listening(self):
         self.logger.info('ouverture du socket WebServer pour le Katze Pit')
         if not self.listen(QHostAddress.Any, link_port):
-            self.logger.error(ERROR_DIC[self.error()])
+            if self.error() == 1006:
+                self.logger.error('impossible de lier le socket; est-ce qu\'une autre instance du Link tourne déjà ?')
+            else:
+                try:
+                    self.logger.error(ERROR_DIC[self.error()])
+                except KeyError:
+                    self.logger.exception('erreur inconnue: {}'.format(self.error()))
         else:
             self.logger.info('socket ouvert, en attente de client')
             # noinspection PyUnresolvedReferences
@@ -281,6 +288,7 @@ class Gui():
             # noinspection PyUnresolvedReferences
             self.dcs_focus_button.clicked.connect(self.on_dcs_focus_button_state_clicked)
             self.dcs_focus_timeout.setValidator(QIntValidator(50, 5000))
+            self.sioc_address_label.setText("Adresse SIOC: {}:{}".format(sioc_hote, sioc_port))
 
         @pyqtSlot()
         def start_logger_handler(self):
@@ -401,10 +409,12 @@ class Gui():
         def on_dcs_focus_button_state_clicked(self):
             if self.dcs_focus_timer.is_running:
                 self.dcs_focus_timer.stop()
+                self.dcs_focus_timeout.setEnabled(True)
                 self.dcs_focus_button.setText('Activer')
                 self.dcs_focus_state.setPixmap(QPixmap(':/pics/red_light.png'))
             else:
                 if raise_dcs_window(refresh_pid=True):
+                    self.dcs_focus_timeout.setEnabled(False)
                     interval = int(self.dcs_focus_timeout.text())
                     if interval < 100:
                         interval = 100
@@ -421,10 +431,9 @@ def raise_dcs_window(refresh_pid=False):
         for process in c.Win32_Process(name='dcs.exe'):
             dcs_pid = process.ProcessId
         if dcs_pid is None:
-            logger.warning('le processus DCS.exe n\'a pas été trouvé')
-            logger.info('notez que "DCS.exe" n\'existe QUE si vous êtes cockpit ou sur l\'interface multijoueur.')
-            logger.ingo('l\'interface principale de DCS (avec les options, l\'éditeur de mission etc...) ne '
-                        'compte pas')
+            logger.warning('le processus DCS.exe n\'a pas été trouvé. Notez que "DCS.exe" n\'existe QUE si vous êtes '
+                           'cockpit ou sur l\'interface multijoueur. L\'interface principale de DCS (avec les options, '
+                           'l\'éditeur de mission etc...) ne compte pas')
             return
     shell.AppActivate(dcs_pid)
     shell.SendKeys('')

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'main.ui'
 #
-# Created: Sun Feb 15 21:04:54 2015
+# Created: Sun Feb 15 22:17:32 2015
 #      by: PyQt5 UI code generator 5.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,7 +21,7 @@ class Ui_MainWindow(object):
         self.log_window.setGeometry(QtCore.QRect(10, 150, 821, 201))
         self.log_window.setObjectName("log_window")
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
-        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 821, 129))
+        self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 10, 821, 131))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout_3.setContentsMargins(5, 5, 5, 5)
@@ -37,9 +37,11 @@ class Ui_MainWindow(object):
         self.ws_state_pic.setObjectName("ws_state_pic")
         self.gridLayout_3.addWidget(self.ws_state_pic, 1, 1, 1, 1)
         self.label_2 = QtWidgets.QLabel(self.horizontalLayoutWidget)
+        self.label_2.setAlignment(QtCore.Qt.AlignCenter)
         self.label_2.setObjectName("label_2")
         self.gridLayout_3.addWidget(self.label_2, 1, 0, 1, 1)
         self.label = QtWidgets.QLabel(self.horizontalLayoutWidget)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
         self.gridLayout_3.addWidget(self.label, 0, 0, 1, 1)
         self.sioc_state_pic = QtWidgets.QLabel(self.horizontalLayoutWidget)
@@ -61,8 +63,11 @@ class Ui_MainWindow(object):
         self.clients_count.setMaximumSize(QtCore.QSize(99999, 16777215))
         self.clients_count.setObjectName("clients_count")
         self.horizontalLayout_5.addWidget(self.clients_count)
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem)
         self.gridLayout_3.addLayout(self.horizontalLayout_5, 1, 2, 1, 1)
         self.label_4 = QtWidgets.QLabel(self.horizontalLayoutWidget)
+        self.label_4.setAlignment(QtCore.Qt.AlignCenter)
         self.label_4.setObjectName("label_4")
         self.gridLayout_3.addWidget(self.label_4, 2, 0, 1, 1)
         self.dcs_focus_state = QtWidgets.QLabel(self.horizontalLayoutWidget)
@@ -79,6 +84,10 @@ class Ui_MainWindow(object):
         self.label_6.setObjectName("label_6")
         self.horizontalLayout.addWidget(self.label_6)
         self.dcs_focus_timeout = QtWidgets.QLineEdit(self.horizontalLayoutWidget)
+        self.dcs_focus_timeout.setEnabled(True)
+        self.dcs_focus_timeout.setMaximumSize(QtCore.QSize(70, 16777215))
+        self.dcs_focus_timeout.setInputMethodHints(QtCore.Qt.ImhDigitsOnly)
+        self.dcs_focus_timeout.setAlignment(QtCore.Qt.AlignRight|QtCore.Qt.AlignTrailing|QtCore.Qt.AlignVCenter)
         self.dcs_focus_timeout.setObjectName("dcs_focus_timeout")
         self.horizontalLayout.addWidget(self.dcs_focus_timeout)
         self.label_7 = QtWidgets.QLabel(self.horizontalLayoutWidget)
@@ -87,7 +96,17 @@ class Ui_MainWindow(object):
         self.dcs_focus_button = QtWidgets.QPushButton(self.horizontalLayoutWidget)
         self.dcs_focus_button.setObjectName("dcs_focus_button")
         self.horizontalLayout.addWidget(self.dcs_focus_button)
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout.addItem(spacerItem1)
         self.gridLayout_3.addLayout(self.horizontalLayout, 2, 2, 1, 1)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setContentsMargins(5, 5, 5, 5)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.sioc_address_label = QtWidgets.QLabel(self.horizontalLayoutWidget)
+        self.sioc_address_label.setText("")
+        self.sioc_address_label.setObjectName("sioc_address_label")
+        self.horizontalLayout_2.addWidget(self.sioc_address_label)
+        self.gridLayout_3.addLayout(self.horizontalLayout_2, 0, 2, 1, 1)
         self.horizontalLayout_3.addLayout(self.gridLayout_3)
         self.textBrowser = QtWidgets.QTextBrowser(self.horizontalLayoutWidget)
         self.textBrowser.setEnabled(True)
