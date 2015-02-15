@@ -21,21 +21,7 @@ from logging import Handler, Formatter
 from ui import main_ui
 from json import dumps
 
-
-ordre = ""
-msgSioc = ""
-Sioc_Dico = {}
-Trans_Dico = {}
-ack_dico = {'Ordre1': 0, 'Ordre2': 0, 'PingBack': 0}
 com_errors = 0
-
-ini_lock = threading.Lock()
-run_lock = threading.Lock()
-Sioc_run = True
-Sioc_alive = False
-WS_run = True
-WS_alive = False
-pulse_ws = 100
 
 STATE_DIC = {
     0: 'déconnecté',
