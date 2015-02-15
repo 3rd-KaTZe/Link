@@ -10,6 +10,8 @@ if __name__ == "__main__":
     if hasattr(sys, 'frozen'):
         sys.stdout = open("stdout.log", "w")
         sys.stderr = open("stderr.log", "w")
+        # workaround for Windows Vista
+        # noinspection PyBroadException
         try:
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(__guid__)
         except:

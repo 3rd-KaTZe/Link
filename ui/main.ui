@@ -6,246 +6,233 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>835</width>
+    <height>358</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>835</width>
+    <height>358</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>835</width>
+    <height>358</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="label">
-    <property name="geometry">
-     <rect>
-      <x>120</x>
-      <y>30</y>
-      <width>47</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>SIOC</string>
-    </property>
-   </widget>
    <widget class="QTextBrowser" name="log_window">
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>350</y>
-      <width>781</width>
-      <height>192</height>
+      <y>150</y>
+      <width>821</width>
+      <height>201</height>
      </rect>
     </property>
    </widget>
-   <widget class="QLabel" name="sioc_state_pic">
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>190</x>
-      <y>20</y>
-      <width>32</width>
-      <height>32</height>
+      <x>10</x>
+      <y>10</y>
+      <width>821</width>
+      <height>129</height>
      </rect>
     </property>
-    <property name="minimumSize">
-     <size>
-      <width>32</width>
-      <height>32</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>32</width>
-      <height>32</height>
-     </size>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap resource="resources.qrc">:/pics/red_light.png</pixmap>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_2">
-    <property name="geometry">
-     <rect>
-      <x>100</x>
-      <y>90</y>
-      <width>46</width>
-      <height>13</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>KatzePit</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="ws_state_pic">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>70</y>
-      <width>32</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>32</width>
-      <height>32</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>32</width>
-      <height>32</height>
-     </size>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap resource="resources.qrc">:/pics/red_light.png</pixmap>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_3">
-    <property name="geometry">
-     <rect>
-      <x>275</x>
-      <y>70</y>
-      <width>181</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Nombre de pits connectés:</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QLabel" name="clients_count">
-    <property name="geometry">
-     <rect>
-      <x>470</x>
-      <y>70</y>
-      <width>16</width>
-      <height>16</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>0</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="dcs_focus_state">
-    <property name="geometry">
-     <rect>
-      <x>190</x>
-      <y>130</y>
-      <width>32</width>
-      <height>32</height>
-     </rect>
-    </property>
-    <property name="minimumSize">
-     <size>
-      <width>32</width>
-      <height>32</height>
-     </size>
-    </property>
-    <property name="maximumSize">
-     <size>
-      <width>32</width>
-      <height>32</height>
-     </size>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="pixmap">
-     <pixmap resource="resources.qrc">:/pics/red_light.png</pixmap>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_4">
-    <property name="geometry">
-     <rect>
-      <x>75</x>
-      <y>140</y>
-      <width>71</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Focus DCS</string>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="dcs_focus_button">
-    <property name="geometry">
-     <rect>
-      <x>160</x>
-      <y>190</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Activer</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_5">
-    <property name="geometry">
-     <rect>
-      <x>150</x>
-      <y>230</y>
-      <width>101</width>
-      <height>61</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>A réactiver si vous quittez/relancez DCS</string>
-    </property>
-    <property name="scaledContents">
-     <bool>false</bool>
-    </property>
-    <property name="wordWrap">
-     <bool>true</bool>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="dcs_focus_timeout">
-    <property name="geometry">
-     <rect>
-      <x>370</x>
-      <y>250</y>
-      <width>113</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>100</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="label_6">
-    <property name="geometry">
-     <rect>
-      <x>285</x>
-      <y>250</y>
-      <width>61</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Intervalle</string>
-    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
+     <property name="margin">
+      <number>5</number>
+     </property>
+     <item>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <property name="margin">
+        <number>5</number>
+       </property>
+       <item row="1" column="1">
+        <widget class="QLabel" name="ws_state_pic">
+         <property name="minimumSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="resources.qrc">:/pics/red_light.png</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Katze Pit</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>SIOC</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="sioc_state_pic">
+         <property name="minimumSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="resources.qrc">:/pics/red_light.png</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2">
+        <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="margin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_3">
+           <property name="maximumSize">
+            <size>
+             <width>99999</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Nombre de pits connectés:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="clients_count">
+           <property name="maximumSize">
+            <size>
+             <width>99999</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_4">
+         <property name="text">
+          <string>Focus DCS</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLabel" name="dcs_focus_state">
+         <property name="minimumSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>32</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+         <property name="pixmap">
+          <pixmap resource="resources.qrc">:/pics/red_light.png</pixmap>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <layout class="QHBoxLayout" name="horizontalLayout">
+         <property name="margin">
+          <number>5</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Intervalle</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="dcs_focus_timeout">
+           <property name="text">
+            <string>100</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>ms</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="dcs_focus_button">
+           <property name="text">
+            <string>Activer</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <widget class="QTextBrowser" name="textBrowser">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="html">
+        <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:12pt; text-decoration: underline;&quot;&gt;Focus DCS:&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:8pt;&quot;&gt;&lt;br /&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:8pt;&quot;&gt;Active une fonction qui rend le focus à la fenêtre de DCS après chaque clic dans le KatzePit. Cela évite de perdre le contrôle de l'appareil à chaque clic dans la fenêtre du Katze Pit. A réactiver si vous quittez/relancez DCS.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
-  <widget class="QMenuBar" name="menubar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>800</width>
-     <height>21</height>
-    </rect>
-   </property>
-  </widget>
-  <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <resources>
   <include location="resources.qrc"/>

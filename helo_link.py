@@ -90,27 +90,32 @@ class SiocClient(QObject):
     def run(self):
         sioc_socket_v2.stateChanged.connect(self.on_state_changed)
         sioc_socket_v2.error.connect(self.on_error)
-        sioc_socket_v2.disconnected.connect(self.connect_to_sioc)
+        sioc_socket_v2.disconnected.connect(self.on_disconnected)
         sioc_socket_v2.readyRead.connect(self.read_data)
         self.connect_to_sioc()
 
     @pyqtSlot()
     def connect_to_sioc(self):
-        # self.logger.debug('connexion à l\'ami SIOC à l\'adresse {}:{}'.format(sioc_hote, sioc_port))
+        self.logger.info('connexion à l\'ami SIOC sur {}:{}'.format(sioc_hote, sioc_port))
         while not sioc_socket_v2.state() == 3:
             sioc_socket_v2.connectToHost(sioc_hote, sioc_port)
             if sioc_socket_v2.waitForConnected(1000):
+                self.logger.info('connexion établie')
                 self.connected.emit()
                 sioc_socket_v2.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
                 sioc_socket_v2.setSocketOption(QAbstractSocket.LowDelayOption, 1)
                 self.write_data(self.data_import)
             else:
                 self.disconnected.emit()
-        self.connected.emit()
 
     @pyqtSlot()
     def on_state_changed(self):
         self.logger.debug('statut: {}'.format(STATE_DIC[sioc_socket_v2.state()]))
+
+    @pyqtSlot()
+    def on_disconnected(self):
+        self.logger.warning('connexion SIOC perdue')
+        self.connect_to_sioc()
 
     @pyqtSlot()
     def on_error(self):
@@ -148,10 +153,11 @@ class WebSocketServer(QWebSocketServer):
         QWebSocketServer.__init__(self, *args, **kwargs)
 
     def start_listening(self):
-        self.logger.debug('')
+        self.logger.info('ouverture du socket WebServer pour le Katze Pit')
         if not self.listen(QHostAddress.LocalHost, link_port):
             self.logger.error(ERROR_DIC[self.error()])
         else:
+            self.logger.info('socket ouvert, en attente de client')
             # noinspection PyUnresolvedReferences
             self.newConnection.connect(self.on_new_connection)
 
@@ -159,6 +165,7 @@ class WebSocketServer(QWebSocketServer):
     def on_new_connection(self):
         self.logger.debug('')
         client = self.nextPendingConnection()
+        self.logger.info('connexion d\'un Katze Pit depuis l\'adresse: {}'.format(client.peerAddress().toString()))
         self.logger.debug(client)
         client.disconnected.connect(self.on_client_disconnect)
         client.textMessageReceived.connect(self.process_text_message)
@@ -167,7 +174,6 @@ class WebSocketServer(QWebSocketServer):
         client.stateChanged.connect(self.on_client_state_changed)
         self.clients.append(client)
         self.new_client_count.emit(self.clients_count)
-        client.ping()
 
     @property
     def clients_count(self):
@@ -180,7 +186,7 @@ class WebSocketServer(QWebSocketServer):
 
     @pyqtSlot(int, str)
     def on_pong(self, elapsed_time, _):
-        self.logger.debug(elapsed_time)
+        self.logger.debug('ping reçu après {}ms'.format(elapsed_time))
 
     @pyqtSlot()
     def on_client_state_changed(self):
@@ -196,6 +202,7 @@ class WebSocketServer(QWebSocketServer):
     def on_client_disconnect(self):
         self.logger.debug('')
         client = self.sender()
+        self.logger.info('déconnexion du Katze Pit: {}'.format(client.peerAddress().toString()))
         client.deleteLater()
         self.clients.remove(client)
         self.new_client_count.emit(self.clients_count)
@@ -257,7 +264,8 @@ class Gui():
             self.q = Queue()
 
         def emit(self, record):
-            self.q.put(record)
+            if record.levelno > 10:
+                self.q.put(record)
 
         @pyqtSlot()
         def run(self):
