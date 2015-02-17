@@ -5,6 +5,7 @@ __guid__ = '34dbf25d-1efc-4d19-956f-6f276f4fb78d'
 
 import sys
 import ctypes
+from os import _exit
 
 if __name__ == "__main__":
     if hasattr(sys, 'frozen'):
@@ -17,3 +18,4 @@ if __name__ == "__main__":
         except:
             pass
     import helo_link
+    _exit(0)
