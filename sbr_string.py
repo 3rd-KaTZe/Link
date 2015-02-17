@@ -15,10 +15,11 @@
 import json
 
 
-def Sioc_Read(Sioc_Data):
+def sioc_read(Sioc_Data):
     #print ("Sioc_Read_function : Recu de Main > ",json.dumps(Sioc_Data),"\n")
 
     #Test si message tronqué, alors envoi erreur canal 5
+    # print('sioc_Data: {}'.format(Sioc_Data))
     if len(Sioc_Data)<3:
         Sioc_Data="Arn.Resp:5=1:\r\n"
 
@@ -38,8 +39,13 @@ def Sioc_Read(Sioc_Data):
 
     #stockage dans le dictionnaire
     for elmt in dataS1:
-        elementS = elmt.split("=")
-        ST[int(elementS[0])]=int(elementS[1])
+        if elmt:
+            elementS = elmt.split("=")
+            try:
+                ST[int(elementS[0])] = int(elementS[1])
+            except IndexError:
+                print(elmt)
+                raise
 
     #print(ST)
 
@@ -54,5 +60,5 @@ def Sioc_Read(Sioc_Data):
 #Sioc_Data = "Arn.Resp:23=2470:26=112:10=66:\r\n"        
 #Sioc_Data = "Arn.Resp:23=2470:\r\n"
 #Sioc_Data = "Arn.Resp:420=10800:206=0:211=0:1000=728620:1002=607643:1004=258202:1005=102332:\r\nArn.Resp:1005=958676:\r\nArn.Resp:1000=505491:\r\n"
-#print(Sioc_Read(Sioc_Data))
-#print(json.dumps(Sioc_Read(Sioc_Data)))
+#print(sioc_read(Sioc_Data))
+#print(json.dumps(sioc_read(Sioc_Data)))
