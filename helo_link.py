@@ -376,6 +376,11 @@ class Gui():
                 global com_errors
                 com_errors += 1
                 msg = '5={}'.format(com_errors)
+            if chan == 7:
+                if self.toggle_dcs_focus():
+                    msg = '7=2'
+                else:
+                    msg = '7=0'
             msg = 'Arn.Resp:{}:\n'.format(msg)
             # self.logger.debug('envoi du message à SIOC: {}'.format(msg))
             self.sioc_client.write_data(msg)
@@ -407,6 +412,10 @@ class Gui():
 
         @pyqtSlot()
         def on_dcs_focus_button_state_clicked(self):
+            self.toggle_dcs_focus()
+
+        @pyqtSlot()
+        def toggle_dcs_focus(self):
             if self.dcs_focus_timer.is_running:
                 self.dcs_focus_timer.stop()
                 self.dcs_focus_timeout.setEnabled(True)
@@ -421,6 +430,7 @@ class Gui():
                     self.dcs_focus_button.setText('Désactiver')
                     self.dcs_focus_state.setPixmap(QPixmap(':/pics/green_light.png'))
                     self.dcs_focus_timer.start(interval)
+                    return True
 
 
 def raise_dcs_window(refresh_pid=False):
