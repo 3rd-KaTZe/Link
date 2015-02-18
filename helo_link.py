@@ -170,7 +170,7 @@ class WebSocketServer(QWebSocketServer):
         client.stateChanged.connect(self.on_client_state_changed)
         self.clients.append(client)
         self.new_client_count.emit(self.clients_count)
-        self.write_data(pit_state)
+        self.write_data(pit_state, client)
 
     @property
     def clients_count(self):
@@ -211,11 +211,14 @@ class WebSocketServer(QWebSocketServer):
         self.msg_from_pit.emit(msg)
 
     @pyqtSlot(str)
-    def write_data(self, msg):
+    def write_data(self, msg, client=None):
         # self.logger.debug(msg)
-        for client in self.clients:
-            # self.logger.debug(client)
+        if client is not None:
             client.sendTextMessage(msg)
+        else:
+            for client in self.clients:
+                # self.logger.debug(client)
+                client.sendTextMessage(msg)
 
 
 class FocusDCS(QObject):
