@@ -3,7 +3,7 @@
 2,Ordre2,1
 4,TS_Chan,1
 5,Error,1
-7,PingBack,1
+7,DCS_Focus,1
 8,Ping,1
 42,TimeMis,1
 44,Clock,1
@@ -17,6 +17,7 @@
 122,AltiRad_D,1
 124,AltiRad_DX,1
 126,AltiRad_FI,1
+128,QNH_Base,1
 130,Vario,1
 132,Bille,1
 134,Acc_G,0.1
