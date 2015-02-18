@@ -170,7 +170,7 @@ class WebSocketServer(QWebSocketServer):
         client.stateChanged.connect(self.on_client_state_changed)
         self.clients.append(client)
         self.new_client_count.emit(self.clients_count)
-        self.write_data(pit_state, client)
+        self.write_data(dumps(pit_state, client))
 
     @property
     def clients_count(self):
