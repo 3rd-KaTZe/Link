@@ -83,6 +83,8 @@ class SiocClient(QObject):
     @pyqtSlot()
     def connect_to_sioc(self):
         self.logger.info('tentative de connexion à l\'ami SIOC sur {}:{}'.format(sioc_hote, sioc_port))
+        global pit_state
+        pit_state = {}
         while not sioc_socket_v2.state() == 3:
             sioc_socket_v2.connectToHost(sioc_hote, sioc_port)
             if sioc_socket_v2.waitForConnected(1000):
@@ -156,6 +158,7 @@ class WebSocketServer(QWebSocketServer):
 
     @pyqtSlot()
     def on_new_connection(self):
+        global pit_state
         self.logger.debug('')
         client = self.nextPendingConnection()
         self.logger.info('connexion d\'un Katze Pit depuis l\'adresse: {}'.format(client.peerAddress().toString()))
@@ -167,6 +170,7 @@ class WebSocketServer(QWebSocketServer):
         client.stateChanged.connect(self.on_client_state_changed)
         self.clients.append(client)
         self.new_client_count.emit(self.clients_count)
+        self.write_data(pit_state)
 
     @property
     def clients_count(self):
@@ -350,6 +354,7 @@ class Gui():
         @pyqtSlot(str)
         def on_sioc_msg(self, msglist):
             # self.logger.debug('message SIOC brut: {}'.format(msglist))
+            global pit_state
             for msg in msglist.split('\r\n'):
                 # self.logger.debug('raw splitted message: {}'.format(msg))
                 if msg in ['Arn.Vivo:'] or not msg:
@@ -358,7 +363,9 @@ class Gui():
                 formatted_msg = sbr_string.sioc_read(msg)
                 dic = {}
                 for k in formatted_msg.keys():
-                    dic[data_dico[k][0]] = round(formatted_msg[k] * data_dico[k][1], 0)
+                    v = round(formatted_msg[k] * data_dico[k][1], 0)
+                    k = data_dico[k][0]
+                    dic[k], pit_state[k] = v, v
                 self.server.write_data(dumps(dic))
 
         @pyqtSlot(str)
@@ -442,6 +449,7 @@ def raise_dcs_window(refresh_pid=False):
 dcs_pid = None
 shell = win32com.client.Dispatch("WScript.Shell")
 logger = mkLogger('__main__')
+pit_state = {}
 data_config = sbr_data.read_config()
 data_dico = sbr_data.read_data_dico()
 sioc_hote = data_config["sioc_hote"]
