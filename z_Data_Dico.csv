@@ -4,11 +4,11 @@
 4,TS_Chan,1
 5,Error,1
 7,DCS_Focus,1
-8,Ping,1
+22,Test_val,1
 42,TimeMis,1
 44,Clock,1
-22,Test_val,1
 48,TimeFly,1
+52,Chrono,1
 102,IAS,1
 104,TAS,1
 106,Mach,1
