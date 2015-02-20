@@ -37,7 +37,7 @@ def logged(f):
     return wrapper
 
 
-def mkLogger(moduleName, lvl=logging.DEBUG, logFile="link.log", custom_handler=None):
+def mkLogger(moduleName, lvl=logging.DEBUG, logFile="KatzeLink.log", custom_handler=None):
     """
     Creates a module-specific logger
     """
@@ -48,7 +48,7 @@ def mkLogger(moduleName, lvl=logging.DEBUG, logFile="link.log", custom_handler=N
     return logging.getLogger(subLoggerName)
 
 
-def __setupLogger(name="main", lvl=logging.DEBUG, logFile="link.log", custom_handler=None):
+def __setupLogger(name="main", lvl=logging.DEBUG, logFile="KatzeLink.log", custom_handler=None):
     try:
         if exists(logFile):
             remove(logFile)

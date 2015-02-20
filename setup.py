@@ -21,6 +21,7 @@ setup(name='KaTZeLink',
           Executable('helo_link.py',
                      base='Win32GUI',
                      icon='./ui/link.ico',
+                     targetName='KatzeLink.exe'
           )],
       requires=['PyQt5', 'wmi'],
 )
