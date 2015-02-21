@@ -134,7 +134,7 @@ class WebSocketServer(QWebSocketServer):
     msg_from_pit = pyqtSignal(str)
 
     new_client_count = pyqtSignal(int)
-    logger, clients = None, []
+    logger, local_clients, remote_clients = None, [], []
 
     @logged
     def __init__(self, *args, **kwargs):
@@ -161,6 +161,7 @@ class WebSocketServer(QWebSocketServer):
         global pit_state
         self.logger.debug('')
         client = self.nextPendingConnection()
+        client.address = client.peerAddress().toString()
         self.logger.info('connexion d\'un Katze Pit depuis l\'adresse: {}'.format(client.peerAddress().toString()))
         self.logger.debug(client)
         client.disconnected.connect(self.on_client_disconnect)
@@ -168,13 +169,16 @@ class WebSocketServer(QWebSocketServer):
         client.pong.connect(self.on_pong)
         client.error.connect(self.on_error)
         client.stateChanged.connect(self.on_client_state_changed)
-        self.clients.append(client)
-        self.new_client_count.emit(self.clients_count)
         self.write_data(dumps(pit_state, client))
+        if client.address in ['127.0.0.1'] + whitelist:
+            self.local_clients.append(client)
+        else:
+            self.remote_clients.append(client)
+        self.new_client_count.emit(self.clients_count)
 
     @property
     def clients_count(self):
-        return len(self.clients)
+        return len(self.local_clients) + len(self.remote_clients)
 
     @pyqtSlot()
     def on_close(self):
@@ -195,19 +199,28 @@ class WebSocketServer(QWebSocketServer):
         client = self.sender()
         self.logger.error(ERROR_DIC[client.error()])
 
+    # noinspection PyBroadException
     @pyqtSlot()
     def on_client_disconnect(self):
         self.logger.debug('')
         client = self.sender()
         self.logger.info('déconnexion du Katze Pit: {}'.format(client.peerAddress().toString()))
         client.deleteLater()
-        self.clients.remove(client)
+        try:
+            self.local_clients.remove(client)
+        except:
+            pass
+        try:
+            self.remote_clients.remove(client)
+        except:
+            pass
         self.new_client_count.emit(self.clients_count)
 
     @pyqtSlot(QByteArray)
     def process_text_message(self, msg):
-        # client = self.sender()
-        # self.logger.debug(msg)
+        client = self.sender()
+        if permit_remote_commands is False and not client in self.local_clients:
+            return
         self.msg_from_pit.emit(msg)
 
     @pyqtSlot(str)
@@ -216,9 +229,9 @@ class WebSocketServer(QWebSocketServer):
         if client is not None:
             client.sendTextMessage(msg)
         else:
-            for client in self.clients:
-                # self.logger.debug(client)
+            for client in self.local_clients + self.remote_clients:
                 client.sendTextMessage(msg)
+
 
 
 class FocusDCS(QObject):
@@ -296,6 +309,16 @@ class Gui():
             self.dcs_focus_button.clicked.connect(self.on_dcs_focus_button_state_clicked)
             self.dcs_focus_timeout.setValidator(QIntValidator(50, 5000))
             self.sioc_address_label.setText("Adresse SIOC: {}:{}".format(sioc_hote, sioc_port))
+            self.permit_remote_checkbox.clicked.connect(self.on_permit_remote_clicked)
+            self.permit_remote_checkbox.setCheckState(2)
+
+        @pyqtSlot()
+        def on_permit_remote_clicked(self):
+            global permit_remote_commands
+            if self.permit_remote_checkbox.checkState() == 2:
+                permit_remote_commands = True
+            else:
+                permit_remote_commands = False
 
         @pyqtSlot()
         def start_logger_handler(self):
@@ -463,6 +486,8 @@ dcs_pid = None
 shell = win32com.client.Dispatch("WScript.Shell")
 logger = mkLogger('__main__')
 pit_state = {}
+whitelist = []
+permit_remote_commands = True
 data_config = sbr_data.read_config()
 data_dico = sbr_data.read_data_dico()
 sioc_hote = data_config["sioc_hote"]
