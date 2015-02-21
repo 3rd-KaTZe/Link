@@ -122,6 +122,9 @@
        </item>
        <item row="1" column="2">
         <layout class="QHBoxLayout" name="horizontalLayout_5">
+         <property name="spacing">
+          <number>0</number>
+         </property>
          <property name="margin">
           <number>5</number>
          </property>
@@ -134,7 +137,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Nombre de pits connectés:</string>
+            <string>Pits connectés: </string>
            </property>
            <property name="alignment">
             <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -142,7 +145,34 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="clients_count">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>L</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="local_clients_count">
+           <property name="maximumSize">
+            <size>
+             <width>99999</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>0</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string> R</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="remote_clients_count">
            <property name="maximumSize">
             <size>
              <width>99999</width>
@@ -166,6 +196,20 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Port écouté: </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="listening_port_label">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

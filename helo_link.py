@@ -133,7 +133,7 @@ class SiocClient(QObject):
 class WebSocketServer(QWebSocketServer):
     msg_from_pit = pyqtSignal(str)
 
-    new_client_count = pyqtSignal(int)
+    new_client_count = pyqtSignal()
     logger, local_clients, remote_clients = None, [], []
 
     @logged
@@ -174,11 +174,19 @@ class WebSocketServer(QWebSocketServer):
             self.local_clients.append(client)
         else:
             self.remote_clients.append(client)
-        self.new_client_count.emit(self.clients_count)
+        self.new_client_count.emit()
 
     @property
-    def clients_count(self):
-        return len(self.local_clients) + len(self.remote_clients)
+    def local_clients_count(self):
+        return len(self.local_clients)
+
+    @property
+    def remote_clients_count(self):
+        return len(self.remote_clients)
+
+    @property
+    def total_clients_count(self):
+        return self.remote_clients_count + self.local_clients_count
 
     @pyqtSlot()
     def on_close(self):
@@ -214,7 +222,7 @@ class WebSocketServer(QWebSocketServer):
             self.remote_clients.remove(client)
         except:
             pass
-        self.new_client_count.emit(self.clients_count)
+        self.new_client_count.emit()
 
     @pyqtSlot(QByteArray)
     def process_text_message(self, msg):
@@ -300,6 +308,7 @@ class Gui():
             QMainWindow.__init__(self)
             self.setupUi(self)
             self.setWindowTitle('Katze Link {}'.format(__version__))
+            self.ensurePolished()
             self.show()
             self.start_logger_handler()
             self.start_sioc_client()
@@ -311,6 +320,7 @@ class Gui():
             self.sioc_address_label.setText("Adresse SIOC: {}:{}".format(sioc_hote, sioc_port))
             self.permit_remote_checkbox.clicked.connect(self.on_permit_remote_clicked)
             self.permit_remote_checkbox.setCheckState(2)
+            self.listening_port_label.setText(str(link_port))
 
         @pyqtSlot()
         def on_permit_remote_clicked(self):
@@ -434,11 +444,11 @@ class Gui():
         def on_ws_msg(self, msg):
             self.logger.debug('message ws: {}'.format(msg))
 
-        @pyqtSlot(int)
-        def on_client_count_change(self, i):
-            self.logger.debug(i)
-            self.clients_count.setText(str(i))
-            if i == 0:
+        @pyqtSlot()
+        def on_client_count_change(self):
+            self.local_clients_count.setText(str(self.server.local_clients_count))
+            self.remote_clients_count.setText(str(self.server.remote_clients_count))
+            if self.server.total_clients_count == 0:
                 self.on_ws_listening()
             else:
                 self.on_ws_connect()
