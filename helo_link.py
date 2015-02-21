@@ -169,11 +169,11 @@ class WebSocketServer(QWebSocketServer):
         client.pong.connect(self.on_pong)
         client.error.connect(self.on_error)
         client.stateChanged.connect(self.on_client_state_changed)
+        self.write_data(dumps(pit_state, client))
         if client.address in ['127.0.0.1'] + whitelist:
             self.local_clients.append(client)
         else:
             self.remote_clients.append(client)
-        self.write_data(dumps(pit_state, client))
         self.new_client_count.emit(self.clients_count)
 
     @property
