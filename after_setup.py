@@ -8,6 +8,10 @@ from zipfile import ZipFile, ZIP_LZMA
 from subprocess import call
 from time import  sleep
 
+print('N\'OUBLIE PAS DE PUSHER ESPECE DE SINGE !!!')
+name = input('name: ')
+desc = input('description: ')
+
 chdir('./build')
 
 z_local = './KaTZeLinkV2_{}.zip'.format(__version__)
@@ -21,10 +25,6 @@ with ZipFile(z, mode="w", compression=ZIP_LZMA) as zip_file:
             zip_file.write(join(root, file))
 
 chdir('..')
-
-print('N\'OUBLIE PAS DE PUSHER ESPECE DE SINGE !!!')
-name = input('name: ')
-desc = input('description: ')
 
 if not call('github-release release --user 3rd-KaTZe --repo Link --tag {} --name "{}" --description "{}"'.format(
         __version__, name, desc)) == 0:
