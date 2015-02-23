@@ -124,6 +124,8 @@ class SiocClient(QObject):
 
     @pyqtSlot(str)
     def write_data(self, msg):
+        if not socket_sioc.state() == 3:
+            return
         socket_sioc.writeData(msg.encode())
         if not socket_sioc.waitForBytesWritten(1000):
             self.logger.error('erreur lors de l\'écriture sur le socket')
@@ -491,6 +493,7 @@ class Gui():
                 msg = msg.split('=')[1]
                 self.logger.debug(msg)
                 self.cach3_client.write_data(msg)
+                return
             if chan == 5:
                 # self.logger.error('erreur Pit: {}'.format(msg))
                 global com_errors
