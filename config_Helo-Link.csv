@@ -3,5 +3,5 @@ sioc_port,8092
 sioc_plage,0
 link_hote,127.0.0.1
 link_port,13333
-ts_hote,192.168.0.10
+ts_hote,127.0.0.1
 ts_port,10500
