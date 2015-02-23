@@ -2,7 +2,6 @@
 __author__ = 'etcher3rd'
 
 import sys
-import threading
 import sbr_string
 import sbr_data
 import win32com.client
@@ -14,7 +13,7 @@ from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QTextCursor, QPixmap, QIntValidator, QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QThread, QObject, QByteArray, QTimer
 from PyQt5.QtWebSockets import QWebSocketServer
-from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress
+from PyQt5.QtNetwork import QTcpSocket, QAbstractSocket, QHostAddress, QUdpSocket
 from custom_logging import mkLogger, logged
 from queue import Queue
 from logging import Handler, Formatter
@@ -74,10 +73,10 @@ class SiocClient(QObject):
     # noinspection PyUnresolvedReferences
     @pyqtSlot()
     def run(self):
-        sioc_socket_v2.stateChanged.connect(self.on_state_changed)
-        sioc_socket_v2.error.connect(self.on_error)
-        sioc_socket_v2.disconnected.connect(self.on_disconnected)
-        sioc_socket_v2.readyRead.connect(self.read_data)
+        socket_sioc.stateChanged.connect(self.on_state_changed)
+        socket_sioc.error.connect(self.on_error)
+        socket_sioc.disconnected.connect(self.on_disconnected)
+        socket_sioc.readyRead.connect(self.read_data)
         self.connect_to_sioc()
 
     @pyqtSlot()
@@ -85,20 +84,20 @@ class SiocClient(QObject):
         self.logger.info('tentative de connexion à l\'ami SIOC sur {}:{}'.format(sioc_hote, sioc_port))
         global pit_state
         pit_state = {}
-        while not sioc_socket_v2.state() == 3:
-            sioc_socket_v2.connectToHost(sioc_hote, sioc_port)
-            if sioc_socket_v2.waitForConnected(1000):
+        while not socket_sioc.state() == 3:
+            socket_sioc.connectToHost(sioc_hote, sioc_port)
+            if socket_sioc.waitForConnected(1000):
                 self.logger.info('connexion établie')
                 self.connected.emit()
-                sioc_socket_v2.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
-                sioc_socket_v2.setSocketOption(QAbstractSocket.LowDelayOption, 1)
+                socket_sioc.setSocketOption(QAbstractSocket.KeepAliveOption, 1)
+                socket_sioc.setSocketOption(QAbstractSocket.LowDelayOption, 1)
                 self.write_data(self.data_import)
             else:
                 self.disconnected.emit()
 
     @pyqtSlot()
     def on_state_changed(self):
-        self.logger.debug('statut: {}'.format(STATE_DIC[sioc_socket_v2.state()]))
+        self.logger.debug('statut: {}'.format(STATE_DIC[socket_sioc.state()]))
 
     @pyqtSlot()
     def on_disconnected(self):
@@ -107,16 +106,16 @@ class SiocClient(QObject):
 
     @pyqtSlot()
     def on_error(self):
-        if sioc_socket_v2.error() in [1, 5]:
-            self.logger.debug(ERROR_DIC[sioc_socket_v2.error()])
+        if socket_sioc.error() in [1, 5]:
+            self.logger.debug(ERROR_DIC[socket_sioc.error()])
             return
-        self.logger.error(ERROR_DIC[sioc_socket_v2.error()])
+        self.logger.error(ERROR_DIC[socket_sioc.error()])
 
     @pyqtSlot()
     def read_data(self):
         # self.logger.debug('données disponibles en lecture')
-        while not sioc_socket_v2.atEnd():
-            msg = sioc_socket_v2.read(4096).decode().strip('\r\n')
+        while not socket_sioc.atEnd():
+            msg = socket_sioc.read(4096).decode().strip('\r\n')
             if msg in ['Arn.Vivo:']:
                 # self.msg_from_sioc.emit('SIOC ALIVE')  # DEBUG
                 break
@@ -125,8 +124,8 @@ class SiocClient(QObject):
 
     @pyqtSlot(str)
     def write_data(self, msg):
-        sioc_socket_v2.writeData(msg.encode())
-        if not sioc_socket_v2.waitForBytesWritten(1000):
+        socket_sioc.writeData(msg.encode())
+        if not socket_sioc.waitForBytesWritten(1000):
             self.logger.error('erreur lors de l\'écriture sur le socket')
 
 
@@ -241,6 +240,62 @@ class WebSocketServer(QWebSocketServer):
                 client.sendTextMessage(msg)
 
 
+class CACH3Client(QObject):
+    connected = pyqtSignal()
+    disconnected = pyqtSignal()
+
+    logger = None
+
+    @logged
+    def __init__(self):
+        self.logger.debug('')
+        QObject.__init__(self)
+
+    # noinspection PyUnresolvedReferences
+    @pyqtSlot()
+    def run(self):
+        socket_cach3.connected.connect(self.on_connected)
+        socket_cach3.disconnected.connect(self.on_disconnected)
+        socket_cach3.stateChanged.connect(self.on_state_changed)
+        socket_cach3.error.connect(self.on_error)
+        self.connect_to_chach3()
+
+    @pyqtSlot(str)
+    def write_data(self, msg):
+        self.logger.debug(msg)
+        socket_cach3.write(msg.encode())
+
+    @pyqtSlot()
+    def connect_to_chach3(self):
+        self.logger.info('tentative de connexion à CACH3 sur {}:10500'.format(cach3_hote))
+        while not socket_cach3.state() == 3:
+            socket_cach3.connectToHost(cach3_hote, 10500)
+            if socket_cach3.waitForConnected(1000):
+                self.logger.info('connexion établie')
+                self.connected.emit()
+            else:
+                self.disconnected.emit()
+
+    @pyqtSlot()
+    def on_state_changed(self):
+        self.logger.debug('statut: {}'.format(STATE_DIC[socket_cach3.state()]))
+
+    @pyqtSlot()
+    def on_connected(self):
+        self.logger.debug('')
+
+    @pyqtSlot()
+    def on_disconnected(self):
+        self.logger.debug('connexion CACH3 perdue')
+        self.connect_to_chach3()
+
+    @pyqtSlot()
+    def on_error(self):
+        if socket_sioc.error() in [1, 5]:
+            self.logger.debug(ERROR_DIC[socket_cach3.error()])
+            return
+        self.logger.error(ERROR_DIC[socket_cach3.error()])
+
 
 class FocusDCS(QObject):
     logger = None
@@ -300,6 +355,7 @@ class Gui():
         sioc_thread, sioc_client = None, None
         logger_thread, logger_handler = None, None
         dcs_focus_timer, dcs_focus_timer_thread = None, None
+        cach3_thread, cach3_client = None, None
         server = None
 
         @logged
@@ -314,13 +370,16 @@ class Gui():
             self.start_sioc_client()
             self.start_ws_server()
             self.start_dcs_focus_timer()
+            self.start_cach3_client()
             # noinspection PyUnresolvedReferences
             self.dcs_focus_button.clicked.connect(self.on_dcs_focus_button_state_clicked)
             self.dcs_focus_timeout.setValidator(QIntValidator(50, 5000))
             self.sioc_address_label.setText("Adresse SIOC: {}:{}".format(sioc_hote, sioc_port))
+            # noinspection PyUnresolvedReferences
             self.permit_remote_checkbox.clicked.connect(self.on_permit_remote_clicked)
             self.permit_remote_checkbox.setCheckState(2)
             self.listening_port_label.setText(str(link_port))
+            self.cach3_ip_label.setText('{}:10500'.format(str(cach3_hote)))
 
         @pyqtSlot()
         def on_permit_remote_clicked(self):
@@ -343,19 +402,28 @@ class Gui():
             logger.addHandler(self.logger_handler)
             self.logger_thread.start()
 
+        # noinspection PyUnresolvedReferences
         @pyqtSlot()
         def start_sioc_client(self):
             self.sioc_thread = QThread(self)
             self.sioc_client = SiocClient()
-            # noinspection PyUnresolvedReferences
-            sioc_socket_v2.connected.connect(self.on_sioc_connect)
-            # noinspection PyUnresolvedReferences
-            sioc_socket_v2.disconnected.connect(self.on_sioc_disconnect)
+            self.sioc_client.connected.connect(self.on_sioc_connect)
+            self.sioc_client.disconnected.connect(self.on_sioc_disconnect)
             self.sioc_client.msg_from_sioc.connect(self.on_sioc_msg)
             self.sioc_client.moveToThread(self.sioc_thread)
-            # noinspection PyUnresolvedReferences
             self.sioc_thread.started.connect(self.sioc_client.run)
             self.sioc_thread.start()
+
+        @pyqtSlot()
+        def start_cach3_client(self):
+            self.cach3_thread = QThread()
+            self.cach3_client = CACH3Client()
+            self.cach3_client.connected.connect(self.on_cach3_connect)
+            self.cach3_client.disconnected.connect(self.on_cach3_disconnect)
+            self.cach3_client.moveToThread(self.cach3_thread)
+            # noinspection PyUnresolvedReferences
+            self.cach3_thread.started.connect(self.cach3_client.run)
+            self.cach3_thread.start()
 
         @pyqtSlot()
         def start_ws_server(self):
@@ -378,6 +446,14 @@ class Gui():
         def log(self, text):
             self.log_window.moveCursor(QTextCursor.End)
             self.log_window.append(text)
+
+        @pyqtSlot()
+        def on_cach3_connect(self):
+            self.cach3_state.setPixmap(QPixmap(':/pics/green_light.png'))
+
+        @pyqtSlot()
+        def on_cach3_disconnect(self):
+            self.cach3_state.setPixmap(QPixmap(':/pics/red_light.png'))
 
         @pyqtSlot()
         def on_sioc_connect(self):
@@ -412,8 +488,9 @@ class Gui():
             # self.server.write_data(dumps(ack_dico))
             chan = int(msg.split('=')[0])
             if chan == 4:
-                # TODO: CACH3
-                pass
+                msg = msg.split('=')[1]
+                self.logger.debug(msg)
+                self.cach3_client.write_data(msg)
             if chan == 5:
                 # self.logger.error('erreur Pit: {}'.format(msg))
                 global com_errors
@@ -492,6 +569,7 @@ def raise_dcs_window(refresh_pid=False):
     shell.SendKeys('')
     return True
 
+
 dcs_pid = None
 shell = win32com.client.Dispatch("WScript.Shell")
 logger = mkLogger('__main__')
@@ -508,7 +586,8 @@ cach3_port = int(data_config["ts_port"])
 link_hote = data_config["link_hote"]
 link_port = int(data_config["link_port"])
 
-sioc_socket_v2 = QTcpSocket()
+socket_sioc = QTcpSocket()
+socket_cach3 = QUdpSocket()
 
 qt_app = QApplication(sys.argv)
 link_icon = QIcon(':/ico/link.ico')
