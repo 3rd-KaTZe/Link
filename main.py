@@ -17,5 +17,6 @@ if __name__ == "__main__":
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(__guid__)
         except:
             pass
+    # noinspection PyUnresolvedReferences
     import helo_link
     _exit(0)
