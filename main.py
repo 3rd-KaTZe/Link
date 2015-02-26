@@ -1,6 +1,6 @@
 # coding=utf-8
 __author__ = 'etcher3rd'
-__version__ = "alpha14"
+__version__ = "alpha15"
 __guid__ = '34dbf25d-1efc-4d19-956f-6f276f4fb78d'
 
 import sys
@@ -17,5 +17,6 @@ if __name__ == "__main__":
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(__guid__)
         except:
             pass
+    # noinspection PyUnresolvedReferences
     import helo_link
     _exit(0)
