@@ -242,7 +242,7 @@ class WebSocketServer(QWebSocketServer):
                 client.sendTextMessage(msg)
 
 
-class CACH3Client(QObject):
+class URClient(QObject):
     connected = pyqtSignal()
     disconnected = pyqtSignal()
 
@@ -256,23 +256,23 @@ class CACH3Client(QObject):
     # noinspection PyUnresolvedReferences
     @pyqtSlot()
     def run(self):
-        socket_cach3.connected.connect(self.on_connected)
-        socket_cach3.disconnected.connect(self.on_disconnected)
-        socket_cach3.stateChanged.connect(self.on_state_changed)
-        socket_cach3.error.connect(self.on_error)
-        self.connect_to_chach3()
+        socket_UR.connected.connect(self.on_connected)
+        socket_UR.disconnected.connect(self.on_disconnected)
+        socket_UR.stateChanged.connect(self.on_state_changed)
+        socket_UR.error.connect(self.on_error)
+        self.connect_to_UR()
 
     @pyqtSlot(str)
     def write_data(self, msg):
         self.logger.debug(msg)
-        socket_cach3.write(msg.encode())
+        socket_UR.write(msg.encode())
 
     @pyqtSlot()
-    def connect_to_chach3(self):
-        self.logger.info('tentative de connexion à CACH3 sur {}:10500'.format(cach3_hote))
-        while not socket_cach3.state() == 3:
-            socket_cach3.connectToHost(cach3_hote, 10500)
-            if socket_cach3.waitForConnected(1000):
+    def connect_to_UR(self):
+        self.logger.info('tentative de connexion à UR sur {}:UR_port'.format(UR_hote))
+        while not socket_UR.state() == 3:
+            socket_UR.connectToHost(UR_hote, UR_port)
+            if socket_UR.waitForConnected(1000):
                 self.logger.info('connexion établie')
                 self.connected.emit()
             else:
@@ -280,7 +280,7 @@ class CACH3Client(QObject):
 
     @pyqtSlot()
     def on_state_changed(self):
-        self.logger.debug('statut: {}'.format(STATE_DIC[socket_cach3.state()]))
+        self.logger.debug('statut: {}'.format(STATE_DIC[socket_UR.state()]))
 
     @pyqtSlot()
     def on_connected(self):
@@ -288,15 +288,15 @@ class CACH3Client(QObject):
 
     @pyqtSlot()
     def on_disconnected(self):
-        self.logger.debug('connexion CACH3 perdue')
-        self.connect_to_chach3()
+        self.logger.debug('connexion UR perdue')
+        self.connect_to_UR()
 
     @pyqtSlot()
     def on_error(self):
         if socket_sioc.error() in [1, 5]:
-            self.logger.debug(ERROR_DIC[socket_cach3.error()])
+            self.logger.debug(ERROR_DIC[socket_UR.error()])
             return
-        self.logger.error(ERROR_DIC[socket_cach3.error()])
+        self.logger.error(ERROR_DIC[socket_UR.error()])
 
 
 class FocusDCS(QObject):
@@ -357,7 +357,7 @@ class Gui():
         sioc_thread, sioc_client = None, None
         logger_thread, logger_handler = None, None
         dcs_focus_timer, dcs_focus_timer_thread = None, None
-        cach3_thread, cach3_client = None, None
+        UR_thread, UR_client = None, None
         server = None
 
         @logged
@@ -372,7 +372,7 @@ class Gui():
             self.start_sioc_client()
             self.start_ws_server()
             self.start_dcs_focus_timer()
-            self.start_cach3_client()
+            self.start_UR_client()
             # noinspection PyUnresolvedReferences
             self.dcs_focus_button.clicked.connect(self.on_dcs_focus_button_state_clicked)
             self.dcs_focus_timeout.setValidator(QIntValidator(50, 5000))
@@ -381,7 +381,7 @@ class Gui():
             self.permit_remote_checkbox.clicked.connect(self.on_permit_remote_clicked)
             self.permit_remote_checkbox.setCheckState(2)
             self.listening_port_label.setText(str(link_port))
-            self.cach3_ip_label.setText('{}:10500'.format(str(cach3_hote)))
+            self.UR_ip_label.setText('{}:UR_port'.format(str(UR_hote)))
 
         @pyqtSlot()
         def on_permit_remote_clicked(self):
@@ -417,15 +417,15 @@ class Gui():
             self.sioc_thread.start()
 
         @pyqtSlot()
-        def start_cach3_client(self):
-            self.cach3_thread = QThread()
-            self.cach3_client = CACH3Client()
-            self.cach3_client.connected.connect(self.on_cach3_connect)
-            self.cach3_client.disconnected.connect(self.on_cach3_disconnect)
-            self.cach3_client.moveToThread(self.cach3_thread)
+        def start_UR_client(self):
+            self.UR_thread = QThread()
+            self.UR_client = URClient()
+            self.UR_client.connected.connect(self.on_UR_connect)
+            self.UR_client.disconnected.connect(self.on_UR_disconnect)
+            self.UR_client.moveToThread(self.UR_thread)
             # noinspection PyUnresolvedReferences
-            self.cach3_thread.started.connect(self.cach3_client.run)
-            self.cach3_thread.start()
+            self.UR_thread.started.connect(self.UR_client.run)
+            self.UR_thread.start()
 
         @pyqtSlot()
         def start_ws_server(self):
@@ -450,12 +450,12 @@ class Gui():
             self.log_window.append(text)
 
         @pyqtSlot()
-        def on_cach3_connect(self):
-            self.cach3_state.setPixmap(QPixmap(':/pics/green_light.png'))
+        def on_UR_connect(self):
+            self.UR_state.setPixmap(QPixmap(':/pics/green_light.png'))
 
         @pyqtSlot()
-        def on_cach3_disconnect(self):
-            self.cach3_state.setPixmap(QPixmap(':/pics/red_light.png'))
+        def on_UR_disconnect(self):
+            self.UR_state.setPixmap(QPixmap(':/pics/red_light.png'))
 
         @pyqtSlot()
         def on_sioc_connect(self):
@@ -492,7 +492,7 @@ class Gui():
             if chan == 4:
                 msg = msg.split('=')[1]
                 self.logger.debug(msg)
-                self.cach3_client.write_data(msg)
+                self.UR_client.write_data(msg)
                 return
             if chan == 5:
                 # self.logger.error('erreur Pit: {}'.format(msg))
@@ -584,13 +584,13 @@ data_dico = sbr_data.read_data_dico()
 sioc_hote = data_config["sioc_hote"]
 sioc_port = int(data_config["sioc_port"])
 sioc_plage = int(data_config["sioc_plage"])
-cach3_hote = data_config["ts_hote"]
-cach3_port = int(data_config["ts_port"])
+UR_hote = data_config["ur_hote"]
+UR_port = int(data_config["ur_port"])
 link_hote = data_config["link_hote"]
 link_port = int(data_config["link_port"])
 
 socket_sioc = QTcpSocket()
-socket_cach3 = QUdpSocket()
+socket_UR = QUdpSocket()
 
 qt_app = QApplication(sys.argv)
 link_icon = QIcon(':/ico/link.ico')
