@@ -381,7 +381,7 @@ class Gui():
             self.permit_remote_checkbox.clicked.connect(self.on_permit_remote_clicked)
             self.permit_remote_checkbox.setCheckState(2)
             self.listening_port_label.setText(str(link_port))
-            self.UR_ip_label.setText('{}:UR_port'.format(str(UR_hote)))
+            self.UR_ip_label.setText('{}:{}'.format(str(UR_hote), str(UR_port)))
 
         @pyqtSlot()
         def on_permit_remote_clicked(self):
@@ -581,17 +581,22 @@ whitelist = []
 permit_remote_commands = True
 data_config = sbr_data.read_config()
 data_dico = sbr_data.read_data_dico()
-sioc_hote = data_config["sioc_hote"]
-sioc_port = int(data_config["sioc_port"])
-sioc_plage = int(data_config["sioc_plage"])
 try:
-    UR_hote = data_config["ur_hote"]
-    UR_port = int(data_config["ur_port"])
+    sioc_hote = data_config["sioc_hote"]
+    sioc_port = int(data_config["sioc_port"])
+    sioc_plage = int(data_config["sioc_plage"])
+    try:
+        UR_hote = data_config["ur_hote"]
+        UR_port = int(data_config["ur_port"])
+    except KeyError:
+        UR_hote = data_config["ts_hote"]
+        UR_port = int(data_config["ts_port"])
+    link_hote = data_config["link_hote"]
+    link_port = int(data_config["link_port"])
 except KeyError:
-    UR_hote = data_config["ts_hote"]
-    UR_port = int(data_config["ts_port"])
-link_hote = data_config["link_hote"]
-link_port = int(data_config["link_port"])
+    logger.exception('Fichier de \'config_Helo-Link.csv\' corrompu')
+    _exit(1)
+
 
 socket_sioc = QTcpSocket()
 socket_UR = QUdpSocket()

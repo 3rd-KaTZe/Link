@@ -1,1 +1,1 @@
-pyuic5 main.ui > main_ui.py && pyrcc5 resources.qrc > ../resources_rc.py
+C:\Python34\Lib\site-packages\PyQt5\pyuic5.bat main.ui > main_ui.py && C:\Python34\Lib\site-packages\PyQt5\pyrcc5.exe resources.qrc > ../resources_rc.py

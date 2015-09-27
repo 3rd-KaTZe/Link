@@ -368,7 +368,7 @@
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; text-decoration: underline;&quot;&gt;Focus DCS:&lt;/span&gt;&lt;/p&gt;&lt;p&gt;Active une fonction qui rend le focus à la fenêtre de DCS après chaque clic dans le KatzePit, ce qui évite de perdre le contrôle de l'appareil. A réactiver si vous quittez/relancez DCS.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
-          <string>CACH3</string>
+          <string>UR</string>
          </property>
          <property name="alignment">
           <set>Qt::AlignCenter</set>
@@ -388,7 +388,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QLabel" name="cach3_ip_label">
+          <widget class="QLabel" name="UR_ip_label">
            <property name="text">
             <string/>
            </property>
