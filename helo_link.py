@@ -584,8 +584,12 @@ data_dico = sbr_data.read_data_dico()
 sioc_hote = data_config["sioc_hote"]
 sioc_port = int(data_config["sioc_port"])
 sioc_plage = int(data_config["sioc_plage"])
-UR_hote = data_config["ur_hote"]
-UR_port = int(data_config["ur_port"])
+try:
+    UR_hote = data_config["ur_hote"]
+    UR_port = int(data_config["ur_port"])
+except KeyError:
+    UR_hote = data_config["ts_hote"]
+    UR_port = int(data_config["ts_port"])
 link_hote = data_config["link_hote"]
 link_port = int(data_config["link_port"])
 
