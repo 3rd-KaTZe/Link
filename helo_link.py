@@ -381,7 +381,7 @@ class Gui():
             self.permit_remote_checkbox.clicked.connect(self.on_permit_remote_clicked)
             self.permit_remote_checkbox.setCheckState(2)
             self.listening_port_label.setText(str(link_port))
-            self.UR_ip_label.setText('{}:UR_port'.format(str(UR_hote)))
+            self.UR_ip_label.setText('{}:{}'.format(str(UR_hote), str(UR_port)))
 
         @pyqtSlot()
         def on_permit_remote_clicked(self):
