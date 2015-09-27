@@ -595,6 +595,7 @@ try:
     link_port = int(data_config["link_port"])
 except KeyError:
     logger.exception('Fichier de \'config_Helo-Link.csv\' corrompu')
+    _exit(1)
 
 
 socket_sioc = QTcpSocket()
